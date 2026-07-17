@@ -288,21 +288,21 @@ export const PreviewPage: React.FC = () => {
         </div>
 
         {/* Info summary block */}
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3 flex-1 overflow-y-auto">
-          <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 flex-1 min-h-[320px] overflow-y-auto">
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-2.5">
             <Eye className="w-4 h-4 text-blue-600" />
-            <h4 className="font-bold text-slate-700 text-xs">Patient File Summary</h4>
+            <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wider">Patient File Summary</h4>
           </div>
           
-          <div className="space-y-2 text-[11px] text-slate-600">
+          <div className="space-y-2.5 text-xs text-slate-600">
             <p><strong className="text-slate-500">Name:</strong> <span className="text-slate-800 font-semibold">{patientInfo.name}</span></p>
             <p><strong className="text-slate-500">Passport / ID:</strong> <span className="text-slate-800 font-mono font-medium">{patientInfo.passportId || "N/A"}</span></p>
             <p><strong className="text-slate-500">Destination:</strong> <span className="text-slate-800 font-semibold">{patientInfo.country}</span></p>
-            <p><strong className="text-slate-500">Total Bill Cost:</strong> <span className="text-slate-800 font-bold">INR {medicines.reduce((s, m) => s + m.total, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></p>
+            <p><strong className="text-slate-500">Total Bill Cost:</strong> <span className="text-slate-800 font-bold text-sm">INR {medicines.reduce((s, m) => s + m.total, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></p>
             <p><strong className="text-slate-500">Assigned Invoice:</strong> <span className="text-slate-800 font-mono">{patientInfo.invoiceNo}</span></p>
           </div>
 
-          <div className="p-3 bg-white rounded-xl border border-slate-200 text-[10px] text-slate-500 space-y-1.5">
+          <div className="p-3.5 bg-white rounded-xl border border-slate-200 text-[10px] text-slate-500 space-y-1.5 mt-2">
             <p className="font-bold text-slate-700 flex items-center gap-1">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
               <span>Compliant Output Ready</span>

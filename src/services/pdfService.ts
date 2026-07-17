@@ -58,7 +58,7 @@ function drawDocumentMetaAndToBlock(doc: jsPDF, patient: PatientInfo, isAnnexure
   doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
-  
+
   doc.text(`Date: ${patient.date}`, pageWidth - margin, yStart, { align: 'right' });
   if (isAnnexure) {
     doc.text(`Ref No: ${patient.refNo || "N/A"}`, pageWidth - margin, yStart + 5, { align: 'right' });
@@ -154,7 +154,7 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
   ]);
 
   let tableEndY = y;
-  
+
   autoTable(doc, {
     startY: y,
     head: tableHeaders,
@@ -323,10 +323,10 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   doc.setFont('times', 'bold');
   doc.setFontSize(9.5);
   doc.text("Amount in Words:", 15, tableEndY + 18);
-  
+
   doc.setFont('times', 'italic');
   doc.setFontSize(9.5);
-  
+
   // Handle text wrapping for long total words
   const splitWords = doc.splitTextToSize(totalWords, doc.internal.pageSize.width - 15 - 45);
   doc.text(splitWords, 45, tableEndY + 18);
@@ -358,67 +358,97 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
 /**
  * GENERATE TO WHOMSOEVER IT MAY CONCERN PDF
  */
-export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSettings): Blob {
+export function generateToWhomsoeverPdf(
+  patient: PatientInfo,
+  settings: ClinicSettings
+): Blob {
+
   const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
   });
 
-  // Start directly below the pre-printed letterhead space (y=55)
+  // ---------------------------------------------------
+  // START POSITION
+  // (Adjust only this if your printed letterhead changes)
+  // ---------------------------------------------------
+
+  const LEFT = 15;
+  const RIGHT = 15;
+  const PAGE_WIDTH = doc.internal.pageSize.getWidth();
+  const CONTENT_WIDTH = PAGE_WIDTH - LEFT - RIGHT;
+
   let y = 55;
-  y = drawDocumentMetaAndToBlock(doc, patient, false, false, y);
 
-  y += 6;
+  // ---------------------------------------------------
+  // DATE
+  // ---------------------------------------------------
 
-  // Professional Certificate Body Text
-  doc.setFont('times', 'normal');
+  doc.setFont("times", "normal");
   doc.setFontSize(11);
-  doc.setTextColor(0, 0, 0); // Black only
-  
-  // Custom spacing / line height
-  const p1 = `This is to certify that the traditional Indian herbal products and Siddha preparations listed in Annexure-1 (Reference ID: ${patient.refNo || 'N/A'}) have been customized, dispensed, and supplied to Mr./Ms. ${patient.name} for personal health support and wellness purposes.`;
-  
-  const p2 = `The patient resides at ${patient.address || '[Patient Address]'}, ${patient.country}, and is identified by Passport / ID Number: ${patient.passportId || '[N/A]'}. The herbal formulations were supplied on ${patient.date} under Cash Invoice Number ${patient.invoiceNo}.`;
 
-  const p3 = `These formulations are purely traditional Indian herbal preparations (Siddha Medicine) meant for personal, non-commercial health support and dietary supplementation. They do not constitute restricted pharmaceutical drugs, narcotics, or scheduled substances under international drug regulations. These are entirely safe for travel, personal transit, and self-consumption.`;
+  doc.text(`Date : ${patient.date}`, RIGHT, y);
 
-  const p4 = `This certificate is issued at the request of the patient to facilitate custom clearance, travel documentation, or medical record verification. We wish them excellent health and a swift, complete recovery.`;
+  y += 12;
 
-  const widthLimit = doc.internal.pageSize.width - 30; // margins 15 each
+  // ---------------------------------------------------
+  // HEADING
+  // ---------------------------------------------------
 
-  // Paragraphs block with wrap
-  const paras = [p1, p2, p3, p4];
-  paras.forEach(paraText => {
-    const splitPara = doc.splitTextToSize(paraText, widthLimit);
-    doc.text(splitPara, 15, y);
-    // Calculate space occupied
-    const linesCount = splitPara.length;
-    y += (linesCount * 5.8) + 6; // line spacing + paragraph gap
-  });
+  doc.setFont("times", "bold");
+  doc.setFontSize(13);
 
-  y += 5;
+  doc.text(
+    "TO WHOM SO EVER IT MAY CONCERN",
+    PAGE_WIDTH / 2,
+    y,
+    { align: "center" }
+  );
 
-  // Thanks & Regards
-  if (y + 25 > doc.internal.pageSize.height - 20) {
-    doc.addPage();
-    y = 25;
-  }
+  y += 12;
 
-  doc.setFont('times', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  doc.text("Thanks & Regards,", 15, y);
+  // ---------------------------------------------------
+  // BODY
+  // ---------------------------------------------------
 
-  // Signature Block
-  drawSignatureBlock(doc, settings, y + 2);
+  doc.setFont("times", "normal");
+  doc.setFontSize(11);
 
-  // Draw footer on all pages
+  const body =
+`I am writing this letter to inform you that the Indian Traditional Herbal products as given in Annexure-1 are given ${patient.name.toUpperCase()}, ${patient.address}, ${patient.country}, PH NO: ${patient.phone || "-"}, ID NO: ${patient.passportId || "-"} for his/her general health purpose. These products are not a drug. So, no need of declaration from Indian Narcotics Departments.`;
+
+  const lines = doc.splitTextToSize(body, CONTENT_WIDTH);
+
+  doc.text(lines, LEFT, y);
+
+  y += (lines.length * 6) + 15;
+
+  // ---------------------------------------------------
+  // THANKS
+  // ---------------------------------------------------
+
+  doc.setFont("times", "normal");
+  doc.setFontSize(11);
+
+  doc.text("Thanks & Regards,", LEFT, y);
+
+  // ---------------------------------------------------
+  // SIGNATURE
+  // ---------------------------------------------------
+
+  drawSignatureBlock(doc, settings, y + 5);
+
+  // ---------------------------------------------------
+  // FOOTER
+  // ---------------------------------------------------
+
   const totalPages = doc.internal.pages.length - 1;
+
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     drawPageFooter(doc, i, totalPages);
   }
 
-  return doc.output('blob');
+  return doc.output("blob");
 }
