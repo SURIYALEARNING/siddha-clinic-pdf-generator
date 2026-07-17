@@ -1,0 +1,6 @@
+{
+  "name": "Siddha Clinic PDF Generator",
+  "description": "A professional patient management and automated document generation tool for Lakshmi Health Care Centre Rockfort.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
