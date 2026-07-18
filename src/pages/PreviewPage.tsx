@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useClinic } from '../context/ClinicContext';
-import { 
-  generateAnnexurePdf, 
-  generateCashBillPdf, 
-  generateToWhomsoeverPdf 
-} from '../services/pdfService';
+
+
+import {generateAnnexurePdf} from '../services/annexurePdf'
+import {generateCashBillPdf} from '../services/cashBillPdf'
+import {generateToWhomsoeverPdf} from '../services/toWhomsoeverPdf'
 import { 
   FileText, 
   Download, 
