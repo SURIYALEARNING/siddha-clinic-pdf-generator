@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicSettings, PatientInfo, MedicineItem } from '../types';
 import { addPageFooters, drawDocumentMetaAndToBlock, drawSignatureBlock, drawTemplate } from './pdfHelpers';
-
+import { sealPage } from "./pdfHelpers";
 export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineItem[], settings: ClinicSettings): Blob {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -59,6 +59,7 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
   doc.text('Thanks & Regards,', 15, tableEndY);
+  sealPage(doc, tableEndY + 3)
   drawSignatureBlock(doc, settings, tableEndY + 2);
   addPageFooters(doc);
 

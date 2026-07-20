@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { ClinicSettings, PatientInfo } from '../types';
-import { addPageFooters, drawSignatureBlock, drawTemplate } from './pdfHelpers';
+import { addPageFooters, drawSignatureBlock, drawTemplate, sealPage } from './pdfHelpers';
 
 export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSettings): Blob {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -12,11 +12,11 @@ export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSe
   const PAGE_WIDTH = doc.internal.pageSize.getWidth();
   const CONTENT_WIDTH = PAGE_WIDTH - LEFT - RIGHT;
   let y = 65;
-  
+
 
   doc.setFont('times', 'normal');
   doc.setFontSize(11);
-  doc.text(`Date : ${patient.date}`,  PAGE_WIDTH - 50, y);
+  doc.text(`Date : ${patient.date}`, PAGE_WIDTH - 50, y);
   y += 12;
 
   doc.setFont('times', 'bold');
@@ -34,6 +34,7 @@ export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSe
   doc.setFont('times', 'normal');
   doc.setFontSize(11);
   doc.text('Thanks & Regards,', 15, y);
+  sealPage(doc, y + 3)
   drawSignatureBlock(doc, settings, y + 5);
   addPageFooters(doc);
 

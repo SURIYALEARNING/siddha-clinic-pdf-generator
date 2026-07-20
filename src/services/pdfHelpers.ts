@@ -3,6 +3,7 @@ import { ClinicSettings, PatientInfo } from '../types';
 import logo from '../assets/logo.png';
 import companyname from '../assets/companyname.png';
 import footer from '../assets/footer.png';
+import companyseel from '../assets/companyseel.png'
 
 export function drawPageFooter(doc: jsPDF, pageNum: number, totalPages: number): void {
   const margin = 15;
@@ -15,7 +16,20 @@ export function drawPageFooter(doc: jsPDF, pageNum: number, totalPages: number):
   doc.text(`Page ${pageNum} of ${totalPages}`, pageWidth - margin, pageHeight - 12, { align: 'right' });
 }
 
+export function sealPage(doc: jsPDF, y: number): void {
+
+  const imageProperties = doc.getImageProperties(companyseel);
+  const logoBox = 40;
+  const logoScale = Math.min(logoBox / imageProperties.width, logoBox / imageProperties.height);
+  const logoWidth = imageProperties.width * logoScale;
+  const logoHeight = imageProperties.height * logoScale;
+  const logoFormat = logo.toLowerCase().includes('image/jpeg') ? 'JPEG' : 'PNG';
+
+  doc.addImage(companyseel, logoFormat, 13, y, logoWidth, logoHeight);
+}
+
 export function drawTemplate(doc: jsPDF): void {
+
   doc.rect(10, 9, 190, 279);
 
   const imageProperties = doc.getImageProperties(logo);
@@ -24,6 +38,8 @@ export function drawTemplate(doc: jsPDF): void {
   const logoWidth = imageProperties.width * logoScale;
   const logoHeight = imageProperties.height * logoScale;
   const logoFormat = logo.toLowerCase().includes('image/jpeg') ? 'JPEG' : 'PNG';
+
+
 
   doc.addImage(logo, logoFormat, 15, 11, logoWidth, logoHeight);
   doc.addImage(companyname, logoFormat, 45, 11, 151, 24);
@@ -53,8 +69,8 @@ export function drawSignatureBlock(doc: jsPDF, settings: ClinicSettings, y: numb
     y = 25;
   }
 
-  const signWidth = 45;
-  const signHeight = 12;
+  const signWidth = 65;
+  const signHeight = 25;
   const signX = pageWidth - margin - signWidth;
 
   if (settings.signature) {
@@ -68,7 +84,7 @@ export function drawSignatureBlock(doc: jsPDF, settings: ClinicSettings, y: numb
   doc.setFont('times', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(0, 0, 0);
-  doc.text('Authorized Signature', pageWidth - margin, y + signHeight + 4, { align: 'right' });
+  doc.text('Authorized Signature', pageWidth - margin - 10, y + signHeight + 4, { align: 'right' });
 
   return y + signHeight + 10;
 }

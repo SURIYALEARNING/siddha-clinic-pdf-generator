@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicSettings, PatientInfo, MedicineItem } from '../types';
 import { numberToWords } from '../utils/numberToWords';
-import { addPageFooters, drawSignatureBlock, drawTemplate } from './pdfHelpers';
+import { addPageFooters, drawSignatureBlock, drawTemplate, sealPage } from './pdfHelpers';
 
 export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineItem[], settings: ClinicSettings): Blob {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -21,7 +21,7 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(9.5);
   doc.text(`Date: ${patient.date}`, PAGE_WIDTH - 15, y - 5, { align: 'right' });
- 
+
 
   y += 10;
   doc.setFontSize(9.5);
@@ -102,6 +102,7 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.text('Thanks & Regards', 15, footerY);
+  sealPage(doc, footerY + 3)
   drawSignatureBlock(doc, settings, footerY + 2);
   addPageFooters(doc);
 
