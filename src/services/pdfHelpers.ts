@@ -26,7 +26,7 @@ export function drawTemplate(doc: jsPDF): void {
   const logoFormat = logo.toLowerCase().includes('image/jpeg') ? 'JPEG' : 'PNG';
 
   doc.addImage(logo, logoFormat, 15, 11, logoWidth, logoHeight);
-  doc.addImage(companyname, logoFormat, 45, 11, 151, 30);
+  doc.addImage(companyname, logoFormat, 45, 11, 151, 24);
   doc.addImage(footer, logoFormat, 11, 270, 188, 13);
 
   doc.setTextColor(25, 75, 150);
