@@ -1,36 +1,26 @@
 import React from 'react';
 import { useClinic } from '../context/ClinicContext';
 import { MedicineItem } from '../types';
-import { 
-  Plus, 
-  Trash2, 
-  Copy, 
-  ArrowUp, 
-  ArrowDown, 
-  Pill, 
-  Calculator, 
+import {
+  Plus,
+  Trash2,
+  Copy,
+  ArrowUp,
+  ArrowDown,
+  Pill,
+  Calculator,
   Info,
   ChevronRight,
   ChevronLeft
 } from 'lucide-react';
 
 const COMMON_SIDDHA_MEDICINES = [
-  "Sanjeevi Parpam",
+
   "Nilavembu Kudineer Powder",
   "Kabasura Kudineer Choornam",
   "Amukkara Choornam Tablets",
-  "Brahmananda Bairavam",
-  "Gowri Chinthamani Tablets",
-  "Agasthiyar Thailam",
-  "Seenthil Chooranam",
-  "Thirupala Chooranam",
-  "Linga Boopathy",
-  "Adathodai Manappagu",
-  "Karisalankanni Chooranam",
-  "Thuthuvalai Nei",
-  "Mathan Thailam",
-  "Pinda Thailam",
-  "Seeraga Choornam"
+
+
 ];
 
 const FOOD_INSTRUCTIONS = [
@@ -54,13 +44,13 @@ const UNIT_OPTIONS = [
 ];
 
 export const MedicineEntryPage: React.FC = () => {
-  const { 
-    medicines, 
-    updateMedicines, 
-    errors, 
-    setActiveTab, 
-    validateForm, 
-    saveCurrentDraft 
+  const {
+    medicines,
+    updateMedicines,
+    errors,
+    setActiveTab,
+    validateForm,
+    saveCurrentDraft
   } = useClinic();
 
   const handleAddRow = () => {
@@ -84,11 +74,13 @@ export const MedicineEntryPage: React.FC = () => {
     const updated = medicines.map(m => {
       if (m.id === id) {
         const updatedItem = { ...m, [field]: value };
-        // If changing qty or rate, recalculate total
         if (field === 'packQty' || field === 'rate') {
           const qty = field === 'packQty' ? Number(value) : m.packQty;
           const rate = field === 'rate' ? Number(value) : m.rate;
           updatedItem.total = Number((qty * rate).toFixed(2));
+        } else if (field === 'total') {
+          const total = Number(value);
+          updatedItem.rate = m.packQty !== 0 ? Number((total / m.packQty).toFixed(2)) : 0;
         }
         return updatedItem;
       }
@@ -145,7 +137,7 @@ export const MedicineEntryPage: React.FC = () => {
 
   return (
     <div id="medicine-entry-container" className="space-y-6">
-      
+
       {/* Instructions header banner */}
       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex gap-3 text-slate-800 text-xs shadow-xs">
         <Info className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
@@ -178,7 +170,7 @@ export const MedicineEntryPage: React.FC = () => {
 
       {/* Table Card container */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-        
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
           <div className="flex items-center gap-2">
             <Pill className="w-5 h-5 text-blue-600" />
@@ -248,9 +240,8 @@ export const MedicineEntryPage: React.FC = () => {
                           list="siddha-medicines"
                           placeholder="Herbal formulation..."
                           onChange={(e) => handleRowChange(med.id, 'name', e.target.value)}
-                          className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold outline-hidden ${
-                            errorName ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                          }`}
+                          className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold outline-hidden ${errorName ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                            }`}
                         />
                         {errorName && (
                           <span className="text-[9px] text-rose-500 block font-bold mt-0.5">{errorName}</span>
@@ -264,9 +255,8 @@ export const MedicineEntryPage: React.FC = () => {
                           min="1"
                           value={med.packQty || ''}
                           onChange={(e) => handleRowChange(med.id, 'packQty', e.target.value === '' ? 0 : Number(e.target.value))}
-                          className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold text-center outline-hidden ${
-                            errorQty ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                          }`}
+                          className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold text-center outline-hidden ${errorQty ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                            }`}
                         />
                         {errorQty && (
                           <span className="text-[9px] text-rose-500 block font-bold mt-0.5">{errorQty}</span>
@@ -293,9 +283,8 @@ export const MedicineEntryPage: React.FC = () => {
                           step="0.01"
                           value={med.rate || ''}
                           onChange={(e) => handleRowChange(med.id, 'rate', e.target.value === '' ? 0 : Number(e.target.value))}
-                          className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold outline-hidden text-right ${
-                            errorRate ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                          }`}
+                          className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold outline-hidden text-right ${errorRate ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                            }`}
                         />
                         {errorRate && (
                           <span className="text-[9px] text-rose-500 block font-bold mt-0.5">{errorRate}</span>
@@ -303,8 +292,15 @@ export const MedicineEntryPage: React.FC = () => {
                       </td>
 
                       {/* Total */}
-                      <td className="py-2 px-2 text-right font-bold text-slate-800">
-                        {med.total.toFixed(2)}
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={med.total || ''}
+                          onChange={(e) => handleRowChange(med.id, 'total', e.target.value === '' ? 0 : Number(e.target.value))}
+                          className="w-full px-2 py-1.5 rounded-lg border text-xs font-semibold text-right border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-hidden"
+                        />
                       </td>
 
                       {/* Dosage details */}
@@ -370,11 +366,10 @@ export const MedicineEntryPage: React.FC = () => {
                             type="button"
                             onClick={() => handleMoveUp(index)}
                             disabled={index === 0}
-                            className={`p-1 rounded-md border transition-all ${
-                              index === 0 
-                                ? 'border-slate-100 text-slate-200 cursor-not-allowed' 
+                            className={`p-1 rounded-md border transition-all ${index === 0
+                                ? 'border-slate-100 text-slate-200 cursor-not-allowed'
                                 : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                            }`}
+                              }`}
                             title="Move Row Up"
                           >
                             <ArrowUp className="w-3.5 h-3.5" />
@@ -385,11 +380,10 @@ export const MedicineEntryPage: React.FC = () => {
                             type="button"
                             onClick={() => handleMoveDown(index)}
                             disabled={index === medicines.length - 1}
-                            className={`p-1 rounded-md border transition-all ${
-                              index === medicines.length - 1 
-                                ? 'border-slate-100 text-slate-200 cursor-not-allowed' 
+                            className={`p-1 rounded-md border transition-all ${index === medicines.length - 1
+                                ? 'border-slate-100 text-slate-200 cursor-not-allowed'
                                 : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                            }`}
+                              }`}
                             title="Move Row Down"
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
