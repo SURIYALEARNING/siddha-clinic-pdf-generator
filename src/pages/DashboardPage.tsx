@@ -178,13 +178,13 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2 mt-4 text-xs text-slate-600">
-            <div className="flex justify-between">
-              <span className="font-semibold text-slate-500">Invoice:</span>
-              <span className="font-mono font-medium text-slate-800">{patientInfo.invoiceNo}</span>
+            <div className="flex justify-between gap-2">
+              <span className="font-semibold text-slate-500 shrink-0">Invoice:</span>
+              <span className="font-mono font-medium text-slate-800 text-right">{patientInfo.invoiceNo}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-semibold text-slate-500">Ref ID:</span>
-              <span className="font-mono font-medium text-slate-800 truncate max-w-[120px]">{patientInfo.refNo}</span>
+            <div className="flex justify-between gap-2">
+              <span className="font-semibold text-slate-500 shrink-0">Ref ID:</span>
+              <span className="font-mono font-medium text-slate-800 truncate max-w-[160px] sm:max-w-[200px]">{patientInfo.refNo}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold text-slate-500">Total Medicines:</span>

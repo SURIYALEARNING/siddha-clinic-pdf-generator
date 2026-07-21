@@ -178,10 +178,10 @@ export const PreviewPage: React.FC = () => {
   }
 
   return (
-    <div id="document-preview-panel" className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-10rem)]">
+    <div id="document-preview-panel" className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 lg:h-[calc(100vh-10rem)]">
       
       {/* LEFT COLUMN: Controls & Document Switcher (5/12 cols) */}
-      <div className="lg:col-span-4 flex flex-col gap-4 overflow-y-auto pr-1">
+      <div className="lg:col-span-4 flex flex-col gap-4 lg:overflow-y-auto lg:pr-1">
         
         {/* Document Switcher Card */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3 shrink-0">
@@ -288,7 +288,7 @@ export const PreviewPage: React.FC = () => {
         </div>
 
         {/* Info summary block */}
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 flex-1 min-h-[320px] overflow-y-auto">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 lg:flex-1 lg:min-h-[320px] lg:overflow-y-auto">
           <div className="flex items-center gap-2 border-b border-slate-200 pb-2.5">
             <Eye className="w-4 h-4 text-blue-600" />
             <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wider">Patient File Summary</h4>

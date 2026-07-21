@@ -427,7 +427,7 @@ export const MedicineEntryPage: React.FC = () => {
         {/* Totals Summary under table */}
         {medicines.length > 0 && (
           <div className="flex justify-end pt-4 border-t border-slate-100">
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-center gap-6 min-w-[320px]">
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-center gap-3 sm:gap-6 w-full sm:w-auto sm:min-w-[320px]">
               <div className="p-3 bg-white text-blue-600 rounded-xl shadow-xs">
                 <Calculator className="w-5 h-5" />
               </div>

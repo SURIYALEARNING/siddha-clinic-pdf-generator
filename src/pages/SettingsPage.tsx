@@ -148,7 +148,7 @@ export const SettingsPage: React.FC = () => {
       <form onSubmit={handleSave} className="space-y-6">
         
         {/* Profile Card details */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 md:p-8 space-y-6 shadow-xs">
           
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <Building className="w-5 h-5 text-blue-600" />
@@ -284,7 +284,7 @@ export const SettingsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* LOGO DRAG DROP */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-1.5">
                 <Image className="w-4 h-4 text-blue-600" />
@@ -343,7 +343,7 @@ export const SettingsPage: React.FC = () => {
           </div>
 
           {/* SIGNATURE DRAG DROP */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-1.5">
                 <FileSignature className="w-4 h-4 text-blue-600" />

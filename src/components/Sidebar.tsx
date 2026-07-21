@@ -7,10 +7,16 @@ import {
   Pill, 
   FileCheck, 
   Settings, 
-  HeartHandshake
+  HeartHandshake,
+  X
 } from 'lucide-react';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { activeTab, setActiveTab, settings } = useClinic();
 
   const menuItems = [
@@ -22,16 +28,28 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside id="clinic-sidebar" className="w-68 bg-slate-900 text-white flex flex-col h-full border-r border-slate-800">
+    <aside id="clinic-sidebar" className={`
+      w-68 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full border-r border-slate-800
+      fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out
+      lg:relative lg:translate-x-0
+      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+    `}>
       {/* Sidebar Header Brand */}
       <div className="p-5 border-b border-slate-800 flex items-center gap-3">
-        <div className="p-2 bg-blue-600 rounded-xl text-white">
+        <div className="p-2 bg-blue-600 rounded-xl text-white shrink-0">
           <HeartHandshake className="w-6 h-6" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-sm font-bold tracking-tight text-white line-clamp-1">LHCC Siddha</h1>
           <p className="text-[10px] text-slate-400 uppercase font-medium tracking-widest">Document Suite</p>
         </div>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors lg:hidden shrink-0"
+          aria-label="Close sidebar"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Navigation Items */}

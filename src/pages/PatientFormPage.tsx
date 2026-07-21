@@ -41,7 +41,7 @@ export const PatientFormPage: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleNextStep} className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-xs">
+      <form onSubmit={handleNextStep} className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 md:p-8 space-y-6 shadow-xs">
         
         <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
           <ClipboardList className="w-5 h-5 text-blue-600" />

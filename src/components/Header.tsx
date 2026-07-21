@@ -1,8 +1,12 @@
 import React from 'react';
 import { useClinic } from '../context/ClinicContext';
-import { PlusCircle, Save, FileText, CheckCircle } from 'lucide-react';
+import { PlusCircle, Save, FileText, CheckCircle, Menu } from 'lucide-react';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onToggleSidebar: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { 
     activeTab, 
     patientInfo, 
@@ -45,9 +49,16 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header id="clinic-header" className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shadow-xs">
-      <div className="flex items-center gap-3">
-        <h2 className="text-lg font-bold text-slate-800">{getPageTitle()}</h2>
+    <header id="clinic-header" className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-xs">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 -ml-2 rounded-lg hover:bg-slate-100 transition-colors lg:hidden shrink-0"
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="w-5 h-5 text-slate-600" />
+        </button>
+        <h2 className="text-sm sm:text-base lg:text-lg font-bold text-slate-800 truncate">{getPageTitle()}</h2>
         {patientInfo.name && (
           <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
