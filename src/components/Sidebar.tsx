@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useClinic } from '../context/ClinicContext';
 import { ActiveTab } from '../types';
 import { 
@@ -8,8 +8,11 @@ import {
   FileCheck, 
   Settings, 
   HeartHandshake,
+  LogOut,
+  Loader2,
   X
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,6 +21,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { activeTab, setActiveTab, settings } = useClinic();
+  const { logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const menuItems = [
     { id: 'dashboard' as ActiveTab, label: 'Dashboard', icon: LayoutDashboard },
@@ -76,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </nav>
 
       {/* Mini Profile / Status Footer */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/40">
+      <div className="p-4 border-t border-slate-800 bg-slate-950/40 space-y-2">
         <div className="flex items-center gap-3">
           {settings.logo ? (
             <img 
@@ -98,6 +103,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </p>
           </div>
         </div>
+        <button
+          onClick={async () => {
+            setLoggingOut(true);
+            try {
+              await logout();
+            } finally {
+              setLoggingOut(false);
+            }
+          }}
+          disabled={loggingOut}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+        >
+          {loggingOut ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <LogOut className="w-4 h-4" />
+          )}
+          {loggingOut ? 'Signing out...' : 'Sign Out'}
+        </button>
       </div>
     </aside>
   );

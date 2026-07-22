@@ -33,25 +33,31 @@ export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight
 
   doc.addImage(logo, logoFormat, 15, 11, logoWidth, logoHeight);
   doc.addImage(companyname, logoFormat, 45, 11, 151, 24);
-  doc.addImage(footer, logoFormat, 11, 270, 188, 13);
+
 
   doc.setTextColor(25, 75, 150);
-  doc.setFontSize(10);
-  doc.text(' lukshmisidhaclinic@gmail.com', 80, 282, { align: 'left' });
-
   doc.setFontSize(12);
-  doc.text('www.lakshmihealthcarecentrerockfort.com', 47, 45, { align: 'left' });
-  doc.text('www.womenpilescare.com', 47, 50, { align: 'left' });
+  doc.text('www.lakshmihealthcarecentrerockfort.com', 72, 38, { align: 'left' });
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.text('34/79, Chinthamani Bazaar(Near Frontline Hospital), Melachinthamani,  ', 58, 42, { align: 'left' });
+  doc.text('Tiruchirappalli, Tamil Nadu- 620002 ', 85, 46, { align: 'left' });
+
+  doc.setTextColor(25, 75, 150);
+  doc.text('Ph No: 81485 59814', 47, 52, { align: 'left' });
+  doc.text('Email: lukshmisidhaclinic@gmail.com', 135, 52, { align: 'left' });
+
 
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.2);
   doc.line(10, 56, 200, 56);
-  doc.line(10, 269, 200, 269);
+  doc.line(10, 265, 200, 265);
 
   doc.setFont(BODY_FONT, 'normal');
-  doc.setFontSize(8);
-  doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY);
-  discY += 5;
+  doc.setFontSize(10);
+  doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY+23);
+  discY += 27;
 
   const disclaimers = [
     '* GST under composition scheme, so tax not collected from patients.',
@@ -59,7 +65,7 @@ export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight
     '* Treatment provided under the supervision of Registered AYUSH Practitioner.',
     '* Not for retail Sale/Resale.'
   ];
-
+  doc.setTextColor(0,0,0);
   disclaimers.forEach((line) => {
     const lines = doc.splitTextToSize(line, tableRight - MARGIN);
     doc.text(lines, MARGIN, discY);
