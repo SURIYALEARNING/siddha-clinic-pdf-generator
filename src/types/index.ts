@@ -19,6 +19,10 @@ export interface PatientInfo {
   date: string;
   invoiceNo: string;
   refNo: string;
+  opNo?: string;
+  age?: string;
+  sex?: string;
+  diagnosis?: string;
 }
 
 export interface MedicineItem {
@@ -33,6 +37,7 @@ export interface MedicineItem {
   night: string;
   foodInstruction: string; // "Before Food" | "After Food" | "With Hot Water" etc.
   remarks: string;
+  quantityLabel?: string; // e.g. "4 Nos", "250 Grm"
 }
 
 export interface SavedDraft {

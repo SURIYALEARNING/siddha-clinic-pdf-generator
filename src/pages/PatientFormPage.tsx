@@ -165,6 +165,72 @@ export const PatientFormPage: React.FC = () => {
             </div>
           </div>
 
+          {/* OP No */}
+          <div className="space-y-1">
+            <label htmlFor="patient-opno-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+              OP No
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                <FileText className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                id="patient-opno-input"
+                name="opNo"
+                value={patientInfo.opNo || ''}
+                onChange={handleChange}
+                placeholder="e.g. OP-2024-001"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium outline-hidden"
+              />
+            </div>
+          </div>
+
+          {/* Age */}
+          <div className="space-y-1">
+            <label htmlFor="patient-age-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Age
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                <FileText className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                id="patient-age-input"
+                name="age"
+                value={patientInfo.age || ''}
+                onChange={handleChange}
+                placeholder="e.g. 35"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium outline-hidden"
+              />
+            </div>
+          </div>
+
+          {/* Sex */}
+          <div className="space-y-1">
+            <label htmlFor="patient-sex-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Sex
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                <FileText className="w-4 h-4" />
+              </span>
+              <select
+                id="patient-sex-input"
+                name="sex"
+                value={patientInfo.sex || ''}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium outline-hidden appearance-none bg-white"
+              >
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
           {/* Passport / ID Number */}
           <div className="space-y-1">
             <label htmlFor="patient-passport-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
@@ -184,6 +250,22 @@ export const PatientFormPage: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium outline-hidden"
               />
             </div>
+          </div>
+
+          {/* Diagnosis */}
+          <div className="space-y-1 md:col-span-2">
+            <label htmlFor="patient-diagnosis-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Diagnosis
+            </label>
+            <textarea
+              id="patient-diagnosis-input"
+              name="diagnosis"
+              rows={2}
+              value={patientInfo.diagnosis || ''}
+              onChange={handleChange}
+              placeholder="e.g. Psoriasis, Chronic joint pain, Respiratory issues"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium outline-hidden resize-none"
+            />
           </div>
 
           {/* Date */}

@@ -4,6 +4,7 @@ import logo from '../assets/logo.png';
 import companyname from '../assets/companyname.png';
 import footer from '../assets/footer.png';
 import companyseel from '../assets/companyseel.png'
+import { number } from 'motion';
 
 export function drawPageFooter(doc: jsPDF, pageNum: number, totalPages: number): void {
   const margin = 15;
@@ -14,6 +15,57 @@ export function drawPageFooter(doc: jsPDF, pageNum: number, totalPages: number):
   doc.setFontSize(8.5);
   doc.setTextColor(0, 0, 0);
   doc.text(`Page ${pageNum} of ${totalPages}`, pageWidth - margin, pageHeight - 12, { align: 'right' });
+}
+
+export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight: number): void {
+  const BODY_FONT = 'times';
+  const MARGIN = 15;
+  doc.rect(10, 9, 190, 279);
+
+  const imageProperties = doc.getImageProperties(logo);
+  const logoBox = 40;
+  const logoScale = Math.min(logoBox / imageProperties.width, logoBox / imageProperties.height);
+  const logoWidth = imageProperties.width * logoScale;
+  const logoHeight = imageProperties.height * logoScale;
+  const logoFormat = logo.toLowerCase().includes('image/jpeg') ? 'JPEG' : 'PNG';
+
+
+
+  doc.addImage(logo, logoFormat, 15, 11, logoWidth, logoHeight);
+  doc.addImage(companyname, logoFormat, 45, 11, 151, 24);
+  doc.addImage(footer, logoFormat, 11, 270, 188, 13);
+
+  doc.setTextColor(25, 75, 150);
+  doc.setFontSize(10);
+  doc.text(' lukshmisidhaclinic@gmail.com', 80, 282, { align: 'left' });
+
+  doc.setFontSize(12);
+  doc.text('www.lakshmihealthcarecentrerockfort.com', 47, 45, { align: 'left' });
+  doc.text('www.womenpilescare.com', 47, 50, { align: 'left' });
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.2);
+  doc.line(10, 56, 200, 56);
+  doc.line(10, 269, 200, 269);
+
+  doc.setFont(BODY_FONT, 'normal');
+  doc.setFontSize(8);
+  doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY);
+  discY += 5;
+
+  const disclaimers = [
+    '* GST under composition scheme, so tax not collected from patients.',
+    '* Medicines are prepared and dispensed for Individual patient by AYUSH Doctor only.',
+    '* Treatment provided under the supervision of Registered AYUSH Practitioner.',
+    '* Not for retail Sale/Resale.'
+  ];
+
+  disclaimers.forEach((line) => {
+    const lines = doc.splitTextToSize(line, tableRight - MARGIN);
+    doc.text(lines, MARGIN, discY);
+    discY += lines.length * 4;
+  });
+
 }
 
 export function sealPage(doc: jsPDF, y: number): void {
