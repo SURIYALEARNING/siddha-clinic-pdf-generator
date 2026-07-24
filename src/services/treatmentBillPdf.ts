@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicSettings, PatientInfo, MedicineItem } from '../types';
 import { numberToWords } from '../utils/numberToWords';
-import { addPageFooters,  sealPage, drawSignatureBlock, drawTemplate, treatmentBillHeadterFooter } from './pdfHelpers';
+import { addPageFooters, sealPage, drawSignatureBlock, drawTemplate, treatmentBillHeadterFooter, getDoctorSeal, formatDateDisplay } from './pdfHelpers';
 
 const MARGIN = 15;
 const BODY_FONT = 'times';
@@ -47,7 +47,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(9.5);
   doc.text(`OP No: ${patient.opNo || ''}`, MARGIN, y);
-  doc.text(`Date: ${patient.date}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
+  doc.text(`Date: ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
 
   y += 8;
 
@@ -67,6 +67,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   y += 5;
   y = drawLabelValue(doc, 'Mobile Number: ', patient.phone, MARGIN, y);
   y = drawLabelValue(doc, 'Address: ', patient.address, MARGIN, y, 160);
+  y += 4
   y = drawLabelValue(doc, 'Diagnosis: ', patient.diagnosis, MARGIN, y, 160);
 
   y += 3;
@@ -126,6 +127,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   });
 
   const grandTotal = medicines.reduce((sum, item) => sum + item.total, 0);
+  const doctorSeal = getDoctorSeal(settings.doctors, settings.selectedDoctorId);
   const tableLeft = MARGIN;
   const tableRight = PAGE_WIDTH - MARGIN;
   let finalY = (doc as any).lastAutoTable.finalY;
@@ -179,7 +181,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   doc.setFont(BODY_FONT, 'normal');
   doc.text('UPI / Cash', MARGIN + doc.getTextWidth('Mode of Payment: '), contentY);
   contentY += 8;
-  sealPage(doc, contentY -2)
+  sealPage(doc, contentY - 2, doctorSeal)
   drawSignatureBlock(doc, settings, contentY);
 
   const lastPageNum = doc.internal.pages.length - 1;
@@ -193,7 +195,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
     discY = 60;
   }
 
-  
+
   discY += 5;
   treatmentBillHeadterFooter(doc, discY, tableRight)
 

@@ -73,7 +73,7 @@ export function getDefaultLogo(): string {
   return canvas.toDataURL('image/png');
 }
 
-export function getDefaultSignature(): string {
+export function getDefaultSignature(doctorName?: string): string {
   if (typeof window === 'undefined') return '';
 
   const canvas = document.createElement('canvas');
@@ -85,6 +85,8 @@ export function getDefaultSignature(): string {
   // Clear background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const name = doctorName || 'Dr. S. Lakshmi';
 
   // Draw signature in smooth blue ink
   ctx.strokeStyle = '#1e40af'; // Blue-800
@@ -127,7 +129,7 @@ export function getDefaultSignature(): string {
   // Print text label under signature
   ctx.fillStyle = '#475569'; // Slate-600
   ctx.font = '11px "Inter", "Helvetica", sans-serif';
-  ctx.fillText('Authorized Physician (B.S.M.S)', 70, 95);
+  ctx.fillText(name, 70, 95);
 
   return canvas.toDataURL('image/png');
 }

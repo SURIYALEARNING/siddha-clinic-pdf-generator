@@ -1,10 +1,16 @@
 import { jsPDF } from 'jspdf';
-import { ClinicSettings, PatientInfo } from '../types';
+import { ClinicSettings, PatientInfo, Doctor } from '../types';
 import logo from '../assets/logo.png';
 import companyname from '../assets/companyname.png';
 import footer from '../assets/footer.png';
-import companyseel from '../assets/companyseel.png'
-import { number } from 'motion';
+import companyseel from '../assets/companyseel.png';
+
+export function formatDateDisplay(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+}
 
 export function drawPageFooter(doc: jsPDF, pageNum: number, totalPages: number): void {
   const margin = 15;
@@ -56,16 +62,16 @@ export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight
 
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(10);
-  doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY+23);
+  doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY + 23);
   discY += 27;
 
   const disclaimers = [
-    '* GST under composition scheme, so tax not collected from patients.',
+    '* GST not collected from patients.',
     '* Medicines are prepared and dispensed for Individual patient by AYUSH Doctor only.',
     '* Treatment provided under the supervision of Registered AYUSH Practitioner.',
     '* Not for retail Sale/Resale.'
   ];
-  doc.setTextColor(0,0,0);
+  doc.setTextColor(0, 0, 0);
   disclaimers.forEach((line) => {
     const lines = doc.splitTextToSize(line, tableRight - MARGIN);
     doc.text(lines, MARGIN, discY);
@@ -74,16 +80,17 @@ export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight
 
 }
 
-export function sealPage(doc: jsPDF, y: number): void {
+export function sealPage(doc: jsPDF, y: number, sealImage?: string): void {
 
-  const imageProperties = doc.getImageProperties(companyseel);
+  const imageSrc = sealImage || companyseel;
+  const imageProperties = doc.getImageProperties(imageSrc);
   const logoBox = 40;
   const logoScale = Math.min(logoBox / imageProperties.width, logoBox / imageProperties.height);
   const logoWidth = imageProperties.width * logoScale;
   const logoHeight = imageProperties.height * logoScale;
-  const logoFormat = logo.toLowerCase().includes('image/jpeg') ? 'JPEG' : 'PNG';
+  const logoFormat = imageSrc.startsWith('data:') ? (imageSrc.includes('jpeg') ? 'JPEG' : 'PNG') : 'PNG';
 
-  doc.addImage(companyseel, logoFormat, 13, y, logoWidth, logoHeight);
+  doc.addImage(imageSrc, logoFormat, 13, y, logoWidth, logoHeight);
 }
 
 export function drawTemplate(doc: jsPDF): void {
@@ -101,11 +108,11 @@ export function drawTemplate(doc: jsPDF): void {
 
   doc.addImage(logo, logoFormat, 15, 11, logoWidth, logoHeight);
   doc.addImage(companyname, logoFormat, 45, 11, 151, 24);
-  doc.addImage(footer, logoFormat, 11, 270, 188, 13);
+  doc.addImage(footer, logoFormat, 11, 270, 188, 14);
 
   doc.setTextColor(25, 75, 150);
-  doc.setFontSize(10);
-  doc.text(' lukshmisidhaclinic@gmail.com', 80, 282, { align: 'left' });
+  doc.setFontSize(9);
+  doc.text(' lukshmisidhaclinic@gmail.com', 65, 283.5, { align: 'left' });
 
   doc.setFontSize(12);
   doc.text('www.lakshmihealthcarecentrerockfort.com', 47, 45, { align: 'left' });
@@ -161,7 +168,7 @@ export function drawDocumentMetaAndToBlock(
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
 
-  doc.text(`Date: ${patient.date}`, pageWidth - margin, yStart, { align: 'right' });
+  doc.text(`Date: ${formatDateDisplay(patient.date)}`, pageWidth - margin, yStart, { align: 'right' });
   // if (isAnnexure) {
   //   doc.text(`Ref No: ${patient.refNo || 'N/A'}`, pageWidth - margin, yStart + 5, { align: 'right' });
   // } else if (isBill) {
@@ -224,4 +231,12 @@ export function addPageFooters(doc: jsPDF): void {
     doc.setPage(pageNum);
     drawPageFooter(doc, pageNum, totalPages);
   }
+
+
+}
+
+export function getDoctorSeal(doctors: Doctor[], selectedDoctorId: string): string {
+  const doctor = doctors.find(d => d.id === selectedDoctorId);
+  if (doctor && doctor.seal) return doctor.seal;
+  return companyseel;
 }

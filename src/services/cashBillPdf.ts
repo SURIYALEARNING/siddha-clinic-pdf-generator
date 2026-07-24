@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicSettings, PatientInfo, MedicineItem } from '../types';
 import { numberToWords } from '../utils/numberToWords';
-import { addPageFooters, drawSignatureBlock, drawTemplate, sealPage } from './pdfHelpers';
+import { addPageFooters, drawSignatureBlock, drawTemplate, sealPage, getDoctorSeal, formatDateDisplay } from './pdfHelpers';
 
 export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineItem[], settings: ClinicSettings): Blob {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -15,12 +15,13 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   const centerX = PAGE_WIDTH / 2;
   let y = 66;
   doc.setFont(BODY_FONT, 'bold');
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(16);
   doc.text('CASH BILL', centerX, y, { align: 'center' });
 
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(9.5);
-  doc.text(`Date: ${patient.date}`, PAGE_WIDTH - 15, y - 5, { align: 'right' });
+  doc.text(`Date: ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - 15, y - 5, { align: 'right' });
 
 
   y += 10;
@@ -73,6 +74,7 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   });
 
   const grandTotal = medicines.reduce((sum, item) => sum + item.total, 0);
+  const doctorSeal = getDoctorSeal(settings.doctors, settings.selectedDoctorId);
   let tableEndY = (doc as any).lastAutoTable.finalY + 8;
   if (tableEndY + 38 > doc.internal.pageSize.height - 20) {
     doc.addPage();
@@ -102,9 +104,16 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.text('Thanks & Regards', 15, footerY);
-  sealPage(doc, footerY + 3)
+  sealPage(doc, footerY + 3, doctorSeal)
   drawSignatureBlock(doc, settings, footerY + 2);
-  addPageFooters(doc);
+  const margin = 15;
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Page 3 of 3`, pageWidth - margin, pageHeight - 12, { align: 'right' });
 
   return doc.output('blob');
 }

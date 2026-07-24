@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ClinicSettings, PatientInfo, MedicineItem, SavedDraft, ActiveTab } from '../types';
-import { getDefaultLogo, getDefaultSignature } from '../utils/defaultImages';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { ClinicSettings, PatientInfo, MedicineItem, SavedDraft, ActiveTab, Doctor } from '../types';
+import { getDefaultLogo } from '../utils/defaultImages';
 
 interface ClinicContextType {
   settings: ClinicSettings;
@@ -10,6 +10,7 @@ interface ClinicContextType {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   updateSettings: (settings: ClinicSettings) => void;
+  selectDoctor: (doctorId: string) => void;
   updatePatientInfo: (info: PatientInfo) => void;
   updateMedicines: (medicines: MedicineItem[]) => void;
   saveCurrentDraft: () => SavedDraft;
@@ -39,14 +40,16 @@ const generateRefNo = (): string => {
 };
 
 const defaultSettings: ClinicSettings = {
-  logo: '', // Will be set programmatically
-  name: "Lakshmi Health Care Centre Rockfort",
-  address: "12, Rockfort Bazaar Street, Trichy - 620002, Tamil Nadu, India",
-  phone: "+91 431 2704111",
-  email: "info@lakshmihealthcare.com",
-  website: "www.lakshmihealthcare.com",
-  signature: '', // Will be set programmatically
-  footerText: "Thank you for choosing Lakshmi Health Care Centre. Authentic Siddha & Herbal Formulations."
+  logo: '',
+  name: '',
+  address: '',
+  phone: '',
+  email: '',
+  website: '',
+  signature: '',
+  footerText: '',
+  doctors: [],
+  selectedDoctorId: ''
 };
 
 const initialPatient = (invoiceCount: number): PatientInfo => {
@@ -76,13 +79,14 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [settings, setSettings] = useState<ClinicSettings>(() => {
     const local = localStorage.getItem('lhcc_clinic_settings');
     if (local) {
-      return JSON.parse(local);
+      const parsed = JSON.parse(local);
+      if (!parsed.doctors) parsed.doctors = [];
+      if (!parsed.selectedDoctorId) parsed.selectedDoctorId = '';
+      return parsed;
     }
-    // Return default but generate images programmatically
     return {
       ...defaultSettings,
-      logo: getDefaultLogo(),
-      signature: getDefaultSignature()
+      logo: getDefaultLogo()
     };
   });
 
@@ -153,6 +157,17 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const updateSettings = (newSettings: ClinicSettings) => {
     setSettings(newSettings);
+  };
+
+  const selectDoctor = (doctorId: string) => {
+    const doctor = settings.doctors.find(d => d.id === doctorId);
+    if (doctor) {
+      setSettings(prev => ({
+        ...prev,
+        selectedDoctorId: doctorId,
+        signature: doctor.signature || prev.signature
+      }));
+    }
   };
 
   const updatePatientInfo = (info: PatientInfo) => {
@@ -274,6 +289,7 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       activeTab,
       setActiveTab,
       updateSettings,
+      selectDoctor,
       updatePatientInfo,
       updateMedicines,
       saveCurrentDraft,

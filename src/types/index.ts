@@ -7,6 +7,8 @@ export interface ClinicSettings {
   website: string;
   signature: string; // Base64 data URI
   footerText: string;
+  doctors: Doctor[];
+  selectedDoctorId: string;
 }
 
 export interface PatientInfo {
@@ -45,6 +47,14 @@ export interface SavedDraft {
   medicines: MedicineItem[];
   createdAt: string;
   id: string;
+}
+
+export interface Doctor {
+  id: string;
+  name: string;
+  qualification: string;
+  signature: string; // Base64 data URI
+  seal: string;      // Base64 data URI
 }
 
 export type ActiveTab = 'dashboard' | 'patient' | 'medicines' | 'preview' | 'settings';

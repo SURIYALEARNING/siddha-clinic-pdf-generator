@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicSettings, PatientInfo, MedicineItem } from '../types';
-import { addPageFooters, drawDocumentMetaAndToBlock, drawSignatureBlock, drawTemplate } from './pdfHelpers';
+import { addPageFooters, drawDocumentMetaAndToBlock, drawSignatureBlock, drawTemplate, getDoctorSeal } from './pdfHelpers';
 import { sealPage } from "./pdfHelpers";
 export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineItem[], settings: ClinicSettings): Blob {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -50,6 +50,7 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
   });
 
   let tableEndY = (doc as any).lastAutoTable.finalY + 8;
+  const doctorSeal = getDoctorSeal(settings.doctors, settings.selectedDoctorId);
   if (tableEndY + 30 > doc.internal.pageSize.height - 20) {
     doc.addPage();
     tableEndY = 25;
@@ -59,9 +60,16 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
   doc.text('Thanks & Regards,', 15, tableEndY);
-  sealPage(doc, tableEndY + 3)
+  sealPage(doc, tableEndY + 3, doctorSeal)
   drawSignatureBlock(doc, settings, tableEndY + 2);
-  addPageFooters(doc);
+  const margin = 15;
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Page 2 of 3`, pageWidth - margin, pageHeight - 12, { align: 'right' });
 
   return doc.output('blob');
 }
