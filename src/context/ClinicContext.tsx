@@ -1,6 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ClinicSettings, PatientInfo, MedicineItem, SavedDraft, ActiveTab, Doctor } from '../types';
 import { getDefaultLogo } from '../utils/defaultImages';
+import { api } from '../services/api';
+
+async function urlToBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 interface ClinicContextType {
   settings: ClinicSettings;
@@ -13,13 +25,17 @@ interface ClinicContextType {
   selectDoctor: (doctorId: string) => void;
   updatePatientInfo: (info: PatientInfo) => void;
   updateMedicines: (medicines: MedicineItem[]) => void;
-  saveCurrentDraft: () => SavedDraft;
+  saveCurrentDraft: () => Promise<SavedDraft>;
   loadDraft: (id: string) => void;
-  deleteDraft: (id: string) => void;
+  deleteDraft: (id: string) => Promise<void>;
   resetPatientForm: () => void;
   errors: Record<string, string>;
   validateForm: () => boolean;
   clearErrors: () => void;
+  addDoctor: (data: { name: string; qualification?: string; signature?: File | null; seal?: File | null }) => Promise<void>;
+  removeDoctor: (id: string) => Promise<void>;
+  loadingDoctors: boolean;
+  loadingDrafts: boolean;
 }
 
 const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
@@ -137,6 +153,8 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
 
   // Auto-save active state to localStorage on any edits
   useEffect(() => {
@@ -151,21 +169,21 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('lhcc_active_medicines', JSON.stringify(medicines));
   }, [medicines]);
 
-  useEffect(() => {
-    localStorage.setItem('lhcc_saved_drafts', JSON.stringify(savedDrafts));
-  }, [savedDrafts]);
-
   const updateSettings = (newSettings: ClinicSettings) => {
     setSettings(newSettings);
   };
 
-  const selectDoctor = (doctorId: string) => {
+  const selectDoctor = async (doctorId: string) => {
     const doctor = settings.doctors.find(d => d.id === doctorId);
     if (doctor) {
+      let sig = doctor.signature || '';
+      if (sig && sig.startsWith('http')) {
+        sig = await urlToBase64(sig);
+      }
       setSettings(prev => ({
         ...prev,
         selectedDoctorId: doctorId,
-        signature: doctor.signature || prev.signature
+        signature: sig,
       }));
     }
   };
@@ -204,24 +222,32 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const saveCurrentDraft = (): SavedDraft => {
-    // Check if we already have this record to update or if it's new
+  const saveCurrentDraft = async (): Promise<SavedDraft> => {
     const existingIndex = savedDrafts.findIndex(d => d.patientInfo.invoiceNo === patientInfo.invoiceNo);
-    
+    const localId = existingIndex >= 0 ? savedDrafts[existingIndex].id : Math.random().toString(36).substr(2, 9);
+
     const draft: SavedDraft = {
-      id: existingIndex >= 0 ? savedDrafts[existingIndex].id : Math.random().toString(36).substr(2, 9),
+      id: localId,
       patientInfo: { ...patientInfo },
       medicines: [...medicines],
       createdAt: new Date().toISOString()
     };
 
+    const res = await api.saveDraft({
+      draftId: existingIndex >= 0 ? localId : undefined,
+      patientInfo: patientInfo as any,
+      medicines: medicines as any,
+    });
+
+    if (!res.error && res.data?.draft) {
+      draft.id = res.data.draft._id;
+    }
+
     if (existingIndex >= 0) {
-      // Update existing
       const updated = [...savedDrafts];
       updated[existingIndex] = draft;
       setSavedDrafts(updated);
     } else {
-      // Append new
       setSavedDrafts(prev => [draft, ...prev]);
     }
 
@@ -238,7 +264,8 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const deleteDraft = (id: string) => {
+  const deleteDraft = async (id: string) => {
+    await api.deleteDraft(id);
     setSavedDrafts(prev => prev.filter(d => d.id !== id));
   };
 
@@ -280,6 +307,106 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setErrors({});
   };
 
+  const addDoctor = useCallback(async (data: { name: string; qualification?: string; signature?: File | null; seal?: File | null }) => {
+    const res = await api.createDoctor(data);
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    const doc = res.data!.doctor;
+    const [sig, seal] = await Promise.all([
+      doc.signature && doc.signature.startsWith('http') ? urlToBase64(doc.signature) : Promise.resolve(doc.signature || ''),
+      doc.seal && doc.seal.startsWith('http') ? urlToBase64(doc.seal) : Promise.resolve(doc.seal || ''),
+    ]);
+    const newDoctor: Doctor = {
+      id: doc._id,
+      name: doc.name,
+      qualification: doc.qualification,
+      signature: sig,
+      seal: seal,
+    };
+    setSettings(prev => ({
+      ...prev,
+      doctors: [...prev.doctors, newDoctor],
+    }));
+  }, []);
+
+  const removeDoctor = useCallback(async (id: string) => {
+    const res = await api.deleteDoctor(id);
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    setSettings(prev => {
+      const updatedDoctors = prev.doctors.filter(d => d.id !== id);
+      const updates: Partial<ClinicSettings> = { doctors: updatedDoctors };
+      if (prev.selectedDoctorId === id) {
+        updates.selectedDoctorId = updatedDoctors.length > 0 ? updatedDoctors[0].id : '';
+        updates.signature = updatedDoctors.length > 0 ? (updatedDoctors[0].signature || prev.signature) : '';
+      }
+      return { ...prev, ...updates };
+    });
+  }, []);
+
+  // Fetch doctors from backend on mount
+  useEffect(() => {
+    (async () => {
+      setLoadingDoctors(true);
+      const res = await api.getDoctors();
+      if (!res.error && res.data?.doctors) {
+        const apiDoctors: Doctor[] = await Promise.all(
+          res.data.doctors.map(async (d) => ({
+            id: d._id,
+            name: d.name,
+            qualification: d.qualification,
+            signature: d.signature && d.signature.startsWith('http')
+              ? await urlToBase64(d.signature)
+              : (d.signature || ''),
+            seal: d.seal && d.seal.startsWith('http')
+              ? await urlToBase64(d.seal)
+              : (d.seal || ''),
+          })),
+        );
+        setSettings(prev => {
+          const merged = [...apiDoctors];
+          const existingIds = new Set(merged.map(d => d.id));
+          for (const local of prev.doctors) {
+            if (!existingIds.has(local.id)) {
+              merged.push(local);
+            }
+          }
+          return { ...prev, doctors: merged };
+        });
+      }
+      setLoadingDoctors(false);
+    })();
+  }, []);
+
+  // Fetch drafts from backend on mount
+  useEffect(() => {
+    (async () => {
+      setLoadingDrafts(true);
+      const res = await api.getDrafts();
+      if (!res.error && res.data?.drafts) {
+        const apiDrafts: SavedDraft[] = res.data.drafts.map(d => ({
+          id: d._id,
+          patientInfo: d.patientInfo as any,
+          medicines: d.medicines as any,
+          createdAt: d.createdAt,
+        }));
+        setSavedDrafts(prev => {
+          const localIds = new Set(prev.map(d => d.id));
+          const merged = [...apiDrafts];
+          for (const local of prev) {
+            if (!localIds.has(local.id)) {
+              merged.push(local);
+            }
+          }
+          return merged;
+        });
+      }
+      setLoadingDrafts(false);
+    })();
+  }, []);
+
   return (
     <ClinicContext.Provider value={{
       settings,
@@ -298,7 +425,11 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       resetPatientForm,
       errors,
       validateForm,
-      clearErrors
+      clearErrors,
+      addDoctor,
+      removeDoctor,
+      loadingDoctors,
+      loadingDrafts
     }}>
       {children}
     </ClinicContext.Provider>

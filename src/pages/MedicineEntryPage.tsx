@@ -124,9 +124,9 @@ export const MedicineEntryPage: React.FC = () => {
     updateMedicines(updated);
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (validateForm()) {
-      saveCurrentDraft();
+      await saveCurrentDraft();
       setActiveTab('preview');
     } else {
       alert("Please resolve validation errors in the medicine table before compiling PDFs.");

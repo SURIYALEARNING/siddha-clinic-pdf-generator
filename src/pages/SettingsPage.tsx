@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useClinic } from '../context/ClinicContext';
-import { ClinicSettings, Doctor } from '../types';
+import { useToast } from '../context/ToastContext';
+import { ClinicSettings } from '../types';
 import { getDefaultLogo, getDefaultSignature } from '../utils/defaultImages';
 import {
   Building,
@@ -24,10 +25,19 @@ import {
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings } = useClinic();
+  const { settings, updateSettings, addDoctor, removeDoctor, loadingDoctors } = useClinic();
+  const toast = useToast();
 
   const [formSettings, setFormSettings] = useState<ClinicSettings>({ ...settings });
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    setFormSettings(prev => ({
+      ...prev,
+      doctors: settings.doctors,
+      selectedDoctorId: settings.selectedDoctorId,
+    }));
+  }, [settings.doctors, settings.selectedDoctorId]);
   const [logoDragActive, setLogoDragActive] = useState<boolean>(false);
   const [sigDragActive, setSigDragActive] = useState<boolean>(false);
 
@@ -37,8 +47,10 @@ export const SettingsPage: React.FC = () => {
   // New doctor form state
   const [newDoctorName, setNewDoctorName] = useState('');
   const [newDoctorQualification, setNewDoctorQualification] = useState('');
-  const [newDoctorSignature, setNewDoctorSignature] = useState('');
-  const [newDoctorSeal, setNewDoctorSeal] = useState('');
+  const [newDoctorSignature, setNewDoctorSignature] = useState<File | null>(null);
+  const [newDoctorSeal, setNewDoctorSeal] = useState<File | null>(null);
+  const [newDoctorSigPreview, setNewDoctorSigPreview] = useState('');
+  const [newDoctorSealPreview, setNewDoctorSealPreview] = useState('');
   const [newDoctorSigDrag, setNewDoctorSigDrag] = useState(false);
   const [newDoctorSealDrag, setNewDoctorSealDrag] = useState(false);
   const newDocSigRef = useRef<HTMLInputElement>(null);
@@ -91,15 +103,13 @@ export const SettingsPage: React.FC = () => {
       alert("Please upload an image file (PNG/JPG).");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        const dataUri = e.target.result as string;
-        if (type === 'signature') setNewDoctorSignature(dataUri);
-        else setNewDoctorSeal(dataUri);
-      }
-    };
-    reader.readAsDataURL(file);
+    if (type === 'signature') {
+      setNewDoctorSignature(file);
+      setNewDoctorSigPreview(URL.createObjectURL(file));
+    } else {
+      setNewDoctorSeal(file);
+      setNewDoctorSealPreview(URL.createObjectURL(file));
+    }
   };
 
   // Logo drag events
@@ -170,56 +180,43 @@ export const SettingsPage: React.FC = () => {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) handleNewDoctorImage(e.dataTransfer.files[0], 'seal');
   };
 
-  const handleAddDoctor = () => {
+  const handleAddDoctor = async () => {
     if (!newDoctorName.trim()) {
-      alert("Doctor name is required.");
+      toast.addToast('Doctor name is required.', 'error');
       return;
     }
-    const id = 'dr-' + newDoctorName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '') + '-' + Date.now();
-    const newDoctor: Doctor = {
-      id,
-      name: newDoctorName.trim(),
-      qualification: newDoctorQualification.trim() || 'B.S.M.S',
-      signature: newDoctorSignature || getDefaultSignature(newDoctorName.trim()),
-      seal: newDoctorSeal
-    };
-    setFormSettings(prev => ({
-      ...prev,
-      doctors: [...prev.doctors, newDoctor]
-    }));
-    setNewDoctorName('');
-    setNewDoctorQualification('');
-    setNewDoctorSignature('');
-    setNewDoctorSeal('');
+    try {
+      await addDoctor({
+        name: newDoctorName.trim(),
+        qualification: newDoctorQualification.trim() || 'B.S.M.S',
+        signature: newDoctorSignature,
+        seal: newDoctorSeal,
+      });
+      toast.addToast('Doctor added successfully.', 'success');
+      setNewDoctorName('');
+      setNewDoctorQualification('');
+      setNewDoctorSignature(null);
+      setNewDoctorSeal(null);
+      setNewDoctorSigPreview('');
+      setNewDoctorSealPreview('');
+    } catch {
+      toast.addToast('Failed to add doctor. Check your connection.', 'error');
+    }
   };
 
-  const handleRemoveDoctor = (doctorId: string) => {
+  const handleRemoveDoctor = async (doctorId: string) => {
     if (!confirm("Remove this doctor from the list?")) return;
-    setFormSettings(prev => {
-      const updatedDoctors = prev.doctors.filter(d => d.id !== doctorId);
-      const updates: Partial<ClinicSettings> = { doctors: updatedDoctors };
-      if (prev.selectedDoctorId === doctorId) {
-        updates.selectedDoctorId = updatedDoctors.length > 0 ? updatedDoctors[0].id : '';
-        updates.signature = updatedDoctors.length > 0 ? updatedDoctors[0].signature || prev.signature : '';
-      }
-      return { ...prev, ...updates };
-    });
+    try {
+      await removeDoctor(doctorId);
+      toast.addToast('Doctor removed successfully.', 'success');
+    } catch {
+      toast.addToast('Failed to remove doctor. Check your connection.', 'error');
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedDoctors = formSettings.doctors.map(d => {
-      if (d.id === formSettings.selectedDoctorId && d.signature !== formSettings.signature) {
-        return { ...d, signature: formSettings.signature };
-      }
-      return d;
-    });
-    const settingsToSave = {
-      ...formSettings,
-      doctors: updatedDoctors
-    };
-    updateSettings(settingsToSave);
-    setFormSettings(prev => ({ ...prev, doctors: updatedDoctors }));
+    updateSettings(formSettings);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
   };
@@ -387,10 +384,10 @@ export const SettingsPage: React.FC = () => {
                 </label>
                 {newDoctorSignature ? (
                   <div className="relative border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center">
-                    <img src={newDoctorSignature} alt="Signature" className="h-8 object-contain" referrerPolicy="no-referrer" />
+                    <img src={newDoctorSigPreview} alt="Signature" className="h-8 object-contain" referrerPolicy="no-referrer" />
                     <button
                       type="button"
-                      onClick={() => setNewDoctorSignature('')}
+                      onClick={() => { setNewDoctorSignature(null); setNewDoctorSigPreview(''); }}
                       className="absolute top-1 right-1 p-0.5 rounded text-slate-400 hover:text-red-500"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -428,10 +425,10 @@ export const SettingsPage: React.FC = () => {
                 </label>
                 {newDoctorSeal ? (
                   <div className="relative border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center">
-                    <img src={newDoctorSeal} alt="Seal" className="h-8 object-contain" referrerPolicy="no-referrer" />
+                    <img src={newDoctorSealPreview} alt="Seal" className="h-8 object-contain" referrerPolicy="no-referrer" />
                     <button
                       type="button"
-                      onClick={() => setNewDoctorSeal('')}
+                      onClick={() => { setNewDoctorSeal(null); setNewDoctorSealPreview(''); }}
                       className="absolute top-1 right-1 p-0.5 rounded text-slate-400 hover:text-red-500"
                     >
                       <Trash2 className="w-3 h-3" />

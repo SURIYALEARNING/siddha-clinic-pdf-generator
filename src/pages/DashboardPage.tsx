@@ -21,7 +21,8 @@ export const DashboardPage: React.FC = () => {
     loadDraft, 
     deleteDraft, 
     setActiveTab,
-    resetPatientForm 
+    resetPatientForm,
+    loadingDrafts
   } = useClinic();
 
   const totalBillValue = medicines.reduce((sum, item) => sum + item.total, 0);
@@ -103,7 +104,7 @@ export const DashboardPage: React.FC = () => {
           <div>
             <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Total Saved Drafts</p>
             <h4 className="text-sm font-bold text-slate-800">{savedDrafts.length} Records</h4>
-            <p className="text-[10px] text-slate-500">Retained in local browser</p>
+            <p className="text-[10px] text-slate-500">{loadingDrafts ? 'Loading...' : 'Saved to cloud'}</p>
           </div>
         </div>
       </div>

@@ -34,14 +34,14 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     }
   };
 
-  const handleSaveDraft = () => {
-    const draft = saveCurrentDraft();
+  const handleSaveDraft = async () => {
+    const draft = await saveCurrentDraft();
     alert(`Draft saved successfully for patient: ${draft.patientInfo.name || 'Untitled'}\nInvoice No: ${draft.patientInfo.invoiceNo}`);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (validateForm()) {
-      saveCurrentDraft();
+      await saveCurrentDraft();
       setActiveTab('preview');
     } else {
       alert("Please fix the validation errors in Patient Information and Medicine Entry first.");

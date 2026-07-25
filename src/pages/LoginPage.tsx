@@ -122,7 +122,7 @@ export function LoginPage() {
             </Link>
           </div>
 
-          <button
+            <button
             type="submit"
             disabled={submitting}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -136,6 +136,13 @@ export function LoginPage() {
               'Sign In'
             )}
           </button>
+
+          <p className="text-center text-sm text-slate-500">
+            Don't have an account?{' '}
+            <Link to="/register" className="font-medium text-emerald-600 hover:text-emerald-700">
+              Register
+            </Link>
+          </p>
         </form>
       </div>
     </div>

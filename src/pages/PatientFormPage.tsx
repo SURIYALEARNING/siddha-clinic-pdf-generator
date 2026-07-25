@@ -13,15 +13,14 @@ export const PatientFormPage: React.FC = () => {
     });
   };
 
-  const handleNextStep = (e: React.FormEvent) => {
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validate current entries
     const isPatientValid = !!patientInfo.name.trim() && !!patientInfo.country.trim();
     if (!isPatientValid) {
       alert("Please fill in the required fields (Patient Name and Country) first.");
       return;
     }
-    saveCurrentDraft();
+    await saveCurrentDraft();
     setActiveTab('medicines');
   };
 

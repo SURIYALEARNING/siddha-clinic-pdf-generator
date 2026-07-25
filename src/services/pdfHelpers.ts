@@ -34,13 +34,8 @@ export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight
   const logoWidth = imageProperties.width * logoScale;
   const logoHeight = imageProperties.height * logoScale;
   const logoFormat = logo.toLowerCase().includes('image/jpeg') ? 'JPEG' : 'PNG';
-
-
-
   doc.addImage(logo, logoFormat, 15, 11, logoWidth, logoHeight);
   doc.addImage(companyname, logoFormat, 45, 11, 151, 24);
-
-
   doc.setTextColor(25, 75, 150);
   doc.setFontSize(12);
   doc.text('www.lakshmihealthcarecentrerockfort.com', 72, 38, { align: 'left' });
@@ -59,7 +54,6 @@ export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight
   doc.setLineWidth(0.2);
   doc.line(10, 56, 200, 56);
   doc.line(10, 265, 200, 265);
-
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(10);
   doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY + 23);
@@ -103,9 +97,6 @@ export function drawTemplate(doc: jsPDF): void {
   const logoWidth = imageProperties.width * logoScale;
   const logoHeight = imageProperties.height * logoScale;
   const logoFormat = logo.toLowerCase().includes('image/jpeg') ? 'JPEG' : 'PNG';
-
-
-
   doc.addImage(logo, logoFormat, 15, 11, logoWidth, logoHeight);
   doc.addImage(companyname, logoFormat, 45, 11, 151, 24);
   doc.addImage(footer, logoFormat, 11, 270, 188, 14);
@@ -231,8 +222,6 @@ export function addPageFooters(doc: jsPDF): void {
     doc.setPage(pageNum);
     drawPageFooter(doc, pageNum, totalPages);
   }
-
-
 }
 
 export function getDoctorSeal(doctors: Doctor[], selectedDoctorId: string): string {
