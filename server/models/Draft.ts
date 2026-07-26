@@ -32,7 +32,6 @@ interface IMedicineItem {
 }
 
 export interface IDraft extends Document {
-  userId: mongoose.Types.ObjectId;
   patientInfo: IPatientInfo;
   medicines: IMedicineItem[];
   createdAt: Date;
@@ -78,7 +77,6 @@ const MedicineItemSchema = new Schema<IMedicineItem>(
 
 const DraftSchema = new Schema<IDraft>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     patientInfo: { type: PatientInfoSchema, default: () => ({}) },
     medicines: { type: [MedicineItemSchema], default: [] },
   },

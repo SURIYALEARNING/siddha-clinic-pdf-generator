@@ -1,5 +1,6 @@
 import React from 'react';
 import { useClinic } from '../context/ClinicContext';
+import { useAuth } from '../context/AuthContext';
 import { 
   Users, 
   Pill, 
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
+  const { user } = useAuth();
   const { 
     patientInfo, 
     medicines, 
@@ -39,7 +41,7 @@ export const DashboardPage: React.FC = () => {
         <div>
           <h3 className="text-xl font-bold tracking-tight">Siddha Clinic Document Hub</h3>
           <p className="text-slate-300 text-xs mt-1 max-w-xl">
-            Welcome back! Easily register patients, formulate traditional Indian herbal prescriptions, auto-calculate bills, and instantly generate official Annexure-1, Cash Bills, and Travel Certificates.
+            Welcome back{user ? `, ${user.name}` : ''}! Easily register patients, formulate traditional Indian herbal prescriptions, auto-calculate bills, and instantly generate official Annexure-1, Cash Bills, and Travel Certificates.
           </p>
         </div>
         <button

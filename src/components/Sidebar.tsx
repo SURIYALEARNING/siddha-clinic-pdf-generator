@@ -21,7 +21,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { activeTab, setActiveTab, settings } = useClinic();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const menuItems = [
@@ -103,6 +103,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </p>
           </div>
         </div>
+
+        {user && (
+          <div className="flex items-center gap-2.5 px-1 py-1.5">
+            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-semibold text-slate-200 truncate leading-tight">{user.name}</p>
+              <p className="text-[9px] text-slate-500 truncate leading-tight">{user.email}</p>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={async () => {
             setLoggingOut(true);

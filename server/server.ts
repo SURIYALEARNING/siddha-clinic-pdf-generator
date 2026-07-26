@@ -23,6 +23,7 @@ import { connectDB } from './config/db';
 import authRoutes from './routes/auth';
 import doctorRoutes from './routes/doctor';
 import draftRoutes from './routes/draft';
+import settingsRoutes from './routes/settings';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -58,6 +59,7 @@ app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/drafts', draftRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });

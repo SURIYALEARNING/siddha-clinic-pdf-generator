@@ -169,8 +169,19 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('lhcc_active_medicines', JSON.stringify(medicines));
   }, [medicines]);
 
-  const updateSettings = (newSettings: ClinicSettings) => {
+  const updateSettings = async (newSettings: ClinicSettings) => {
     setSettings(newSettings);
+    await api.upsertSettings({
+      logo: newSettings.logo,
+      name: newSettings.name,
+      address: newSettings.address,
+      phone: newSettings.phone,
+      email: newSettings.email,
+      website: newSettings.website,
+      signature: newSettings.signature,
+      footerText: newSettings.footerText,
+      selectedDoctorId: newSettings.selectedDoctorId,
+    });
   };
 
   const selectDoctor = async (doctorId: string) => {
@@ -377,6 +388,28 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
       }
       setLoadingDoctors(false);
+    })();
+  }, []);
+
+  // Fetch settings from backend on mount
+  useEffect(() => {
+    (async () => {
+      const res = await api.getSettings();
+      if (!res.error && res.data?.settings) {
+        const s = res.data.settings;
+        setSettings(prev => ({
+          ...prev,
+          logo: s.logo || prev.logo,
+          name: s.name || prev.name,
+          address: s.address || prev.address,
+          phone: s.phone || prev.phone,
+          email: s.email || prev.email,
+          website: s.website || prev.website,
+          signature: s.signature || prev.signature,
+          footerText: s.footerText || prev.footerText,
+          selectedDoctorId: s.selectedDoctorId || prev.selectedDoctorId,
+        }));
+      }
     })();
   }, []);
 

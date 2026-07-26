@@ -143,4 +143,26 @@ export const api = {
 
   deleteDraft: (id: string) =>
     request<{ message: string }>(`/drafts/${id}`, { method: 'DELETE' }),
+
+  // Settings
+  getSettings: () =>
+    request<{ settings: {
+      _id: string; logo: string; name: string; address: string; phone: string;
+      email: string; website: string; signature: string; footerText: string;
+      selectedDoctorId: string;
+    } | null }>('/settings'),
+
+  upsertSettings: (data: {
+    logo?: string; name?: string; address?: string; phone?: string;
+    email?: string; website?: string; signature?: string; footerText?: string;
+    selectedDoctorId?: string;
+  }) =>
+    request<{ settings: {
+      _id: string; logo: string; name: string; address: string; phone: string;
+      email: string; website: string; signature: string; footerText: string;
+      selectedDoctorId: string;
+    } }>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };
