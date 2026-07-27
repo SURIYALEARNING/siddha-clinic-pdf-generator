@@ -4,14 +4,19 @@ import { getDefaultLogo } from '../utils/defaultImages';
 import { api } from '../services/api';
 
 async function urlToBase64(url: string): Promise<string> {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return '';
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return '';
+  }
 }
 
 interface ClinicContextType {
@@ -189,7 +194,11 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (doctor) {
       let sig = doctor.signature || '';
       if (sig && sig.startsWith('http')) {
-        sig = await urlToBase64(sig);
+        try {
+          sig = await urlToBase64(sig);
+        } catch {
+          sig = '';
+        }
       }
       setSettings(prev => ({
         ...prev,
@@ -361,31 +370,35 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     (async () => {
       setLoadingDoctors(true);
-      const res = await api.getDoctors();
-      if (!res.error && res.data?.doctors) {
-        const apiDoctors: Doctor[] = await Promise.all(
-          res.data.doctors.map(async (d) => ({
-            id: d._id,
-            name: d.name,
-            qualification: d.qualification,
-            signature: d.signature && d.signature.startsWith('http')
-              ? await urlToBase64(d.signature)
-              : (d.signature || ''),
-            seal: d.seal && d.seal.startsWith('http')
-              ? await urlToBase64(d.seal)
-              : (d.seal || ''),
-          })),
-        );
-        setSettings(prev => {
-          const merged = [...apiDoctors];
-          const existingIds = new Set(merged.map(d => d.id));
-          for (const local of prev.doctors) {
-            if (!existingIds.has(local.id)) {
-              merged.push(local);
+      try {
+        const res = await api.getDoctors();
+        if (!res.error && res.data?.doctors) {
+          const apiDoctors: Doctor[] = await Promise.all(
+            res.data.doctors.map(async (d) => ({
+              id: d._id,
+              name: d.name,
+              qualification: d.qualification,
+              signature: d.signature && d.signature.startsWith('http')
+                ? await urlToBase64(d.signature)
+                : (d.signature || ''),
+              seal: d.seal && d.seal.startsWith('http')
+                ? await urlToBase64(d.seal)
+                : (d.seal || ''),
+            })),
+          );
+          setSettings(prev => {
+            const merged = [...apiDoctors];
+            const existingIds = new Set(merged.map(d => d.id));
+            for (const local of prev.doctors) {
+              if (!existingIds.has(local.id)) {
+                merged.push(local);
+              }
             }
-          }
-          return { ...prev, doctors: merged };
-        });
+            return { ...prev, doctors: merged };
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch doctors:', err);
       }
       setLoadingDoctors(false);
     })();
