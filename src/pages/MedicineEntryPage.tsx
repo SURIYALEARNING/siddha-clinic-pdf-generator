@@ -215,7 +215,7 @@ export const MedicineEntryPage: React.FC = () => {
                   <th className="py-3 px-2 w-56">Medicine Name</th>
                   <th className="py-3 px-2 w-28">Pack Qty</th>
                   <th className="py-3 px-2 w-32">Dosage Unit</th>
-                  <th className="py-3 px-2 w-28">Rate (INR)</th>
+                  <th className="py-3 px-2 w-40">Rate Per unit</th>
                   <th className="py-3 px-2 w-24 text-right">Total</th>
                   <th className="py-3 px-2 text-center w-40">Dosage (M - N - N)</th>
                   <th className="py-3 px-2 w-40">Food Details</th>

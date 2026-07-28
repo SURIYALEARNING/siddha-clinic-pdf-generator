@@ -160,7 +160,7 @@ export function drawDocumentMetaAndToBlock(
   doc.setTextColor(0, 0, 0);
 
   doc.text(`Date: ${formatDateDisplay(patient.date)}`, pageWidth - margin, yStart, { align: 'right' });
-  doc.text(`Invoice No: ${patient.invoiceNo}`, pageWidth - margin, yStart + 5, { align: 'right' });
+  doc.text(`Ref No: ${patient.invoiceNo}`, pageWidth - margin, 52, { align: 'right' });
 
   const titleY = yStart + 15;
   doc.setFont('times', 'bold');

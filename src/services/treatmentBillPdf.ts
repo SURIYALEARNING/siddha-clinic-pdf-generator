@@ -48,7 +48,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   doc.setFontSize(9.5);
   doc.text(`OP No: ${patient.opNo || ''}`, MARGIN, y);
   doc.text(`Date: ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
-  doc.text(`Invoice No: ${patient.invoiceNo}`, PAGE_WIDTH - MARGIN, y + 5, { align: 'right' });
+  doc.text(`Ref No: ${patient.invoiceNo}`, PAGE_WIDTH - MARGIN, y + 5, { align: 'right' });
 
   y += 8;
 

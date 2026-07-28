@@ -18,7 +18,7 @@ export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSe
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
   doc.text(`Date : ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - 50, y);
-  doc.text(`Invoice No: ${patient.invoiceNo}`, PAGE_WIDTH - 75, y + 5);
+  doc.text(`Ref No: ${patient.invoiceNo}`, PAGE_WIDTH - 70, 52);
   y += 17;
 
   doc.setFont('times', 'bold');
@@ -28,14 +28,22 @@ export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSe
   y += 12;
   doc.setFont('times', 'normal');
   doc.setFontSize(15);
-  const nameLine = `I am writing this letter to inform you that the Indian Traditional Herbal products as given in Annexure-1 are given ${patient.name.toUpperCase()},`;
-  const addrLine = `${patient.address}, ${patient.country}, PH NO: ${patient.phone || '-'}`;
-  const idLine = `ID NO: ${patient.passportId || '-'} for his/her general health purpose. These products are not a drug. So, no need of declaration from Indian Narcotics Departments.`;
   const maxWidth = doc.internal.pageSize.width - 30;
+  const content1 = `I am writing this letter to inform you that the Indian Traditional Herbal products as given in Annexure-1 are given`;
+  const name = patient.name.toUpperCase();
+  const address = patient.address;
+  const country = patient.country;
+  const phone = `PH NO: ${patient.phone || '-'}`;
+  const passportId = `ID NO: ${patient.passportId || '-'}`;
+  const content2 = `for his/her general health purpose. These products are not a drug. So, no need of declaration from Indian Narcotics Departments.`;
   const lines = [
-    ...doc.splitTextToSize(nameLine, maxWidth),
-    ...doc.splitTextToSize(addrLine, maxWidth),
-    ...doc.splitTextToSize(idLine, maxWidth),
+    ...doc.splitTextToSize(content1, maxWidth),
+    name,
+    address,
+    country,
+    phone,
+    passportId,
+    ...doc.splitTextToSize(content2, maxWidth),
   ];
   doc.text(lines, 15, y);
 
