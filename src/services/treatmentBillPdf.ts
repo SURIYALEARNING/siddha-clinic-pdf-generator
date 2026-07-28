@@ -72,7 +72,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
 
   y += 3;
 
-  const tableHeaders = [['S No', 'Description', 'No of Pack', 'Qty']];
+  const tableHeaders = [['S No', 'Description', 'Dosage Unit', 'Qty']];
   const tableData = medicines.map((med, index) => [
     (index + 1).toString(),
     med.name,

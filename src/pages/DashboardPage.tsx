@@ -283,7 +283,7 @@ export const DashboardPage: React.FC = () => {
                             <button
                               id={`history-btn-delete-${draft.id}`}
                               onClick={() => {
-                                if (confirm(`Are you sure you want to permanently delete draft for "${draft.patientInfo.name}"?`)) {
+                                if (confirm(`Delete draft for "${draft.patientInfo.name}"? It can be restored later.`)) {
                                   deleteDraft(draft.id);
                                 }
                               }}

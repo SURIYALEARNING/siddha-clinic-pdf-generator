@@ -16,7 +16,7 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
   doc.text('Prescribed Medicine Details & Dosage Schedule', 15, y);
   y += 5;
 
-  const tableHeaders = [['S.No', 'Medicine Name', 'Dosage Qty', 'No of Pack', 'Morning', 'Noon', 'Night', 'Food / Remarks']];
+  const tableHeaders = [['S.No', 'Medicine Name', 'Dosage Unit', 'Qty', 'Morning', 'Noon', 'Night', 'Food / Remarks']];
   const tableData = medicines.map((med, index) => [
     (index + 1).toString(),
     med.name,
@@ -36,11 +36,11 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
     headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 9, font: 'times', fontStyle: 'bold', lineColor: [0, 0, 0], lineWidth: 0.1 },
     bodyStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 8.5, font: 'times', lineColor: [0, 0, 0], lineWidth: 0.1 },
     columnStyles: {
-      0: { halign: 'center', cellWidth: 10 },
+      0: { halign: 'center', cellWidth: 12 },
       1: { fontStyle: 'bold', cellWidth: 48 },
       2: { halign: 'center', cellWidth: 20 },
-      3: { halign: 'center', cellWidth: 18 },
-      4: { halign: 'center', cellWidth: 14 },
+      3: { halign: 'center', cellWidth: 10 },
+      4: { halign: 'center', cellWidth: 17 },
       5: { halign: 'center', cellWidth: 14 },
       6: { halign: 'center', cellWidth: 14 },
       7: { cellWidth: 42 }

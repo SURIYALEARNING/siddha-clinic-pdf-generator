@@ -34,6 +34,9 @@ interface IMedicineItem {
 export interface IDraft extends Document {
   patientInfo: IPatientInfo;
   medicines: IMedicineItem[];
+  isDeleted: boolean;
+  deletedBy?: string;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -79,6 +82,9 @@ const DraftSchema = new Schema<IDraft>(
   {
     patientInfo: { type: PatientInfoSchema, default: () => ({}) },
     medicines: { type: [MedicineItemSchema], default: [] },
+    isDeleted: { type: Boolean, default: false },
+    deletedBy: { type: String },
+    deletedAt: { type: Date },
   },
   { timestamps: true },
 );

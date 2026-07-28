@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { Draft } from '../models/Draft';
+import { AuthRequest } from '../middleware/auth';
 
-export async function getDrafts(req: Request, res: Response): Promise<void> {
+export async function getDrafts(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const drafts = await Draft.find().sort({ createdAt: -1 });
+    const drafts = await Draft.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
     res.json({ drafts });
   } catch (err) {
     console.error('getDrafts error:', err);
@@ -34,10 +35,14 @@ export async function saveDraft(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function deleteDraft(req: Request, res: Response): Promise<void> {
+export async function deleteDraft(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const draft = await Draft.findByIdAndDelete(id);
+    const draft = await Draft.findByIdAndUpdate(
+      id,
+      { isDeleted: true, deletedBy: req.userId, deletedAt: new Date() },
+      { new: true },
+    );
     if (!draft) {
       res.status(404).json({ error: 'Draft not found' });
       return;

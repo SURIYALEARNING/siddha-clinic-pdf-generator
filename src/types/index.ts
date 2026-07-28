@@ -47,6 +47,8 @@ export interface SavedDraft {
   medicines: MedicineItem[];
   createdAt: string;
   id: string;
+  deletedBy?: string;
+  deletedAt?: string;
 }
 
 export interface Doctor {

@@ -2,9 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useClinic } from '../context/ClinicContext';
 
 
+import {generateToWhomsoeverPdf} from '../services/toWhomsoeverPdf'
 import {generateAnnexurePdf} from '../services/annexurePdf'
 import {generateCashBillPdf} from '../services/cashBillPdf'
-import {generateToWhomsoeverPdf} from '../services/toWhomsoeverPdf'
 import {generateTreatmentBillPdf} from '../services/treatmentBillPdf'
 import { 
   FileText, 
@@ -20,12 +20,12 @@ import {
   ExternalLink
 } from 'lucide-react';
 
-type DocumentType = 'annexure' | 'bill' | 'certificate' | 'treatment';
+type DocumentType = 'certificate' | 'annexure' | 'bill' | 'treatment';
 
 export const PreviewPage: React.FC = () => {
   const { patientInfo, medicines, settings, validateForm } = useClinic();
   
-  const [activeDoc, setActiveDoc] = useState<DocumentType>('annexure');
+  const [activeDoc, setActiveDoc] = useState<DocumentType>('certificate');
   const [annexureUrl, setAnnexureUrl] = useState<string>('');
   const [billUrl, setBillUrl] = useState<string>('');
   const [certUrl, setCertUrl] = useState<string>('');
@@ -55,9 +55,9 @@ export const PreviewPage: React.FC = () => {
         if (treatmentUrl) URL.revokeObjectURL(treatmentUrl);
 
         // Generate Blobs
+        const certBlob = generateToWhomsoeverPdf(patientInfo, settings);
         const annexureBlob = generateAnnexurePdf(patientInfo, medicines, settings);
         const billBlob = generateCashBillPdf(patientInfo, medicines, settings);
-        const certBlob = generateToWhomsoeverPdf(patientInfo, settings);
         const treatmentBlob = generateTreatmentBillPdf(patientInfo, medicines, settings);
 
         // Set URLs
@@ -85,9 +85,9 @@ export const PreviewPage: React.FC = () => {
 
   const getActiveUrl = () => {
     switch (activeDoc) {
+      case 'certificate': return certUrl;
       case 'annexure': return annexureUrl;
       case 'bill': return billUrl;
-      case 'certificate': return certUrl;
       case 'treatment': return treatmentUrl;
     }
   };
@@ -95,9 +95,9 @@ export const PreviewPage: React.FC = () => {
   const getDocName = () => {
     const slug = (patientInfo.name || 'Patient').replace(/\s+/g, '_');
     switch (activeDoc) {
+      case 'certificate': return `${slug}_ToWhomsoever.pdf`;
       case 'annexure': return `${slug}_Annexure-1.pdf`;
       case 'bill': return `${slug}_CashBill.pdf`;
-      case 'certificate': return `${slug}_ToWhomsoever.pdf`;
       case 'treatment': return `${slug}_TreatmentBill.pdf`;
     }
   };
@@ -141,10 +141,10 @@ export const PreviewPage: React.FC = () => {
 
   const handleDownloadAll = () => {
     const docs: { url: string; name: string }[] = [
+      { url: certUrl, name: `${(patientInfo.name || 'Patient').replace(/\s+/g, '_')}_ToWhomsoever.pdf` },
       { url: annexureUrl, name: `${(patientInfo.name || 'Patient').replace(/\s+/g, '_')}_Annexure-1.pdf` },
       { url: billUrl, name: `${(patientInfo.name || 'Patient').replace(/\s+/g, '_')}_CashBill.pdf` },
-      { url: treatmentUrl, name: `${(patientInfo.name || 'Patient').replace(/\s+/g, '_')}_TreatmentBill.pdf` },
-      { url: certUrl, name: `${(patientInfo.name || 'Patient').replace(/\s+/g, '_')}_ToWhomsoever.pdf` }
+      { url: treatmentUrl, name: `${(patientInfo.name || 'Patient').replace(/\s+/g, '_')}_TreatmentBill.pdf` }
     ];
 
     docs.forEach(doc => {
@@ -197,6 +197,26 @@ export const PreviewPage: React.FC = () => {
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Document</h3>
           
           <div className="space-y-1.5">
+            {/* To Whomsoever Tab */}
+            <button
+              id="tab-btn-cert"
+              onClick={() => setActiveDoc('certificate')}
+              className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs text-left font-bold transition-all ${
+                activeDoc === 'certificate'
+                  ? 'bg-blue-50 border-blue-300 text-blue-700'
+                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-600" />
+                <div>
+                  <p>1. Certification Letter</p>
+                  <p className="text-[10px] text-slate-400 font-medium">To Whomsoever It May Concern</p>
+                </div>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+            </button>
+
             {/* Annexure Tab */}
             <button
               id="tab-btn-annexure"
@@ -210,7 +230,7 @@ export const PreviewPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-blue-600" />
                 <div>
-                  <p>1. Annexure-1</p>
+                  <p>2. Annexure-1</p>
                   <p className="text-[10px] text-slate-400 font-medium">Customs & Medicine Manifest</p>
                 </div>
               </div>
@@ -230,7 +250,7 @@ export const PreviewPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-slate-700" />
                 <div>
-                  <p>2. Cash Bill / Invoice</p>
+                  <p>3. Cash Bill / Invoice</p>
                   <p className="text-[10px] text-slate-400 font-medium">Auto-Calculated Financials</p>
                 </div>
               </div>
@@ -250,31 +270,11 @@ export const PreviewPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-emerald-600" />
                 <div>
-                  <p>3. Treatment Bill</p>
+                  <p>4. Treatment Bill</p>
                   <p className="text-[10px] text-slate-400 font-medium">Detailed Patient Invoice</p>
                 </div>
               </div>
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            </button>
-
-            {/* To Whomsoever Tab */}
-            <button
-              id="tab-btn-cert"
-              onClick={() => setActiveDoc('certificate')}
-              className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs text-left font-bold transition-all ${
-                activeDoc === 'certificate'
-                  ? 'bg-blue-50 border-blue-300 text-blue-700'
-                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-indigo-600" />
-                <div>
-                  <p>4. Certification Letter</p>
-                  <p className="text-[10px] text-slate-400 font-medium">To Whomsoever It May Concern</p>
-                </div>
-              </div>
-              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
             </button>
           </div>
         </div>
@@ -350,7 +350,7 @@ export const PreviewPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-xs font-bold text-slate-700">
-              Live: {activeDoc === 'annexure' ? 'Annexure-1.pdf' : activeDoc === 'bill' ? 'CashBill.pdf' : activeDoc === 'treatment' ? 'TreatmentBill.pdf' : 'ToWhomsoever.pdf'}
+              Live: {activeDoc === 'certificate' ? 'ToWhomsoever.pdf' : activeDoc === 'annexure' ? 'Annexure-1.pdf' : activeDoc === 'bill' ? 'CashBill.pdf' : 'TreatmentBill.pdf'}
             </span>
           </div>
 

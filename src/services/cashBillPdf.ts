@@ -53,7 +53,7 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   }
   y += 5;
 
-  const tableHeaders = [['S.No', 'Identification No', 'Pack', 'Qty', 'Rate per Piece (INR)', 'Total Value (INR)']];
+  const tableHeaders = [['S.No', 'Identification No', 'Dosage Unit', 'Qty', 'Rate per Unit (INR)', 'Total Value (INR)']];
   const tableData = medicines.map((med, index) => [
     (index + 1).toString(), med.name, med.unit, med.packQty.toString(), med.rate.toFixed(2), med.total.toFixed(2)
   ]);

@@ -20,6 +20,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 import { connectDB } from './config/db';
+import { startDraftCleanupJob } from './jobs/cleanupDrafts';
 import authRoutes from './routes/auth';
 import doctorRoutes from './routes/doctor';
 import draftRoutes from './routes/draft';
@@ -89,6 +90,9 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 async function start() {
   try {
     await connectDB();
+
+    startDraftCleanupJob();
+    console.log('[cleanup] Draft cleanup job scheduled (runs daily at midnight)');
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
