@@ -1,175 +1,572 @@
-# Siddha Clinic PDF Generator — Production Readiness Documentation
+# Siddha Clinic PDF Generator
 
-## Project Overview
-
-Full-stack clinic management & PDF document generator for Lakshmi Health Care Centre Rockfort.  
-**Frontend:** React 19 + Vite 6 + TypeScript + Tailwind CSS 4  
-**Backend:** Express 4 + Mongoose 8 + TypeScript  
-**Database:** MongoDB  
-**PDF:** jspdf + jspdf-autotable
+Full-stack clinic management & PDF document generator for **Lakshmi Health Care Centre Rockfort (LHCC)**.  
+Generates Annexure-1, Cash Bill, Treatment Bill, and To-Whomsoever-It-May-Concern certificates.
 
 ---
 
-## What Has Been Built
+## Table of Contents
 
-### Authentication System (`server/routes/auth.ts`)
-- **POST** `/api/auth/register` — register new user, sends OTP to admin email  
-- **POST** `/api/auth/verify-registration-otp` — verify OTP & complete registration  
-- **POST** `/api/auth/login` — login with email/password, returns JWT  
-- **POST** `/api/auth/forgot-password` — send password reset OTP  
-- **POST** `/api/auth/reset-password` — verify OTP & reset password  
-- **GET** `/api/auth/me` — get current user from token  
-
-### Doctor Management (`server/routes/doctor.ts`)
-- **GET** `/api/doctors` — list all doctors  
-- **POST** `/api/doctors` — create doctor (name, qualification, signature image, seal image)  
-- **PUT** `/api/doctors/:id` — update doctor  
-- **DELETE** `/api/doctors/:id` — delete doctor  
-
-All doctor routes use **multer** middleware for image upload (2MB limit, images only).  
-Uploads stored in `server/uploads/doctors/` and served via `/uploads/doctors/`.
-
-### Draft / Patient Record Management (`server/routes/draft.ts`)
-- **GET** `/api/drafts` — list all drafts for authenticated user  
-- **POST** `/api/drafts` — save draft (create or update by `draftId`)  
-- **DELETE** `/api/drafts/:id` — delete draft  
-
-Drafts include patient demographics + medicine formulations, stored per-user.
-
-### Data Flow
-1. **PatientFormPage** → fills patient info → calls `saveCurrentDraft()` → saves to MongoDB + local state  
-2. **MedicineEntryPage** → adds medicines → calls `saveCurrentDraft()` → saves to MongoDB + local state  
-3. **DashboardPage** → loads drafts from API on mount, displays with Load/Delete actions  
-4. **SettingsPage** → manages doctors: add/remove via API with multer image upload, select doctor for signature  
-5. **PreviewPage** → generates 4 PDF types (Annexure-1, Cash Bill, Treatment Bill, Certificate)  
+- [Tech Stack](#tech-stack)
+- [Architecture Overview](#architecture-overview)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [Frontend](#frontend)
+- [Backend](#backend)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Docker Deployment](#docker-deployment)
+- [Production Configuration](#production-configuration)
+- [Security Features](#security-features)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## Files Modified/Created
+## Tech Stack
 
-### Backend — New Files
-| File | Purpose |
-|------|---------|
-| `server/models/Doctor.ts` | Mongoose schema: name, qualification, signature, seal, timestamps |
-| `server/controllers/doctorController.ts` | CRUD with multer file handling |
-| `server/routes/doctor.ts` | Express router with auth + multer |
-| `server/middleware/upload.ts` | Multer config: disk storage, 2MB limit, image-only filter |
-| `server/models/Draft.ts` | Mongoose schema: userId, patientInfo, medicines, timestamps |
-| `server/controllers/draftController.ts` | Get/save/delete drafts per user |
-| `server/routes/draft.ts` | Express router with auth |
-| `server/middleware/validate.ts` | express-validator rules for all routes + error handler |
-
-### Backend — Modified Files
-| File | Changes |
-|------|---------|
-| `server/server.ts` | Added `helmet`, `express-rate-limit` (global 200/15min, auth 20/15min), `express-mongo-sanitize`, `trust proxy`, CORS restricted to `CLIENT_ORIGIN`, `express.json` 5MB limit |
-| `server/middleware/auth.ts` | Removed fallback JWT secret (now validated at startup) |
-| `server/controllers/authController.ts` | Removed fallback JWT secret |
-| `server/utils/email.ts` | Added try/catch around `sendMail` with error logging |
-| `server/controllers/doctorController.ts` | Uses `X-Forwarded-Proto` for URL generation; removed redundant name validation |
-| `server/routes/auth.ts` | Added validation middleware to all POST routes |
-| `server/routes/doctor.ts` | Added validation middleware (name required, MongoDB ID params) |
-| `server/routes/draft.ts` | Added validation middleware (patientInfo object, medicines array, MongoDB ID params) |
-
-### Frontend — Modified Files
-| File | Changes |
-|------|---------|
-| `src/services/api.ts` | Added `requestFormData()` helper; doctor create/update use FormData; added draft API methods |
-| `src/context/ClinicContext.tsx` | Async `saveCurrentDraft()` (calls API); async `deleteDraft()`; fetch doctors + drafts from API on mount; `urlToBase64()` helper; removed `lhcc_saved_drafts` localStorage persistence |
-| `src/pages/SettingsPage.tsx` | Doctor add/remove use API; file uploads directly via `File` objects; `useEffect` syncs `formSettings` with context |
-| `src/pages/PatientFormPage.tsx` | `handleNextStep` is async, `await saveCurrentDraft()` |
-| `src/pages/MedicineEntryPage.tsx` | `handleNextStep` is async, `await saveCurrentDraft()` |
-| `src/components/Header.tsx` | `handleSaveDraft`/`handleGenerate` are async |
-| `src/pages/DashboardPage.tsx` | Shows "Saved to cloud" stat, added `loadingDrafts` |
-| `src/services/pdfHelpers.ts` | Cleaned up formatting |
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 19, TypeScript 5.8, Vite 6, Tailwind CSS 4, Motion (Framer Motion) |
+| **Backend** | Express 4, TypeScript 5.8, Mongoose 8, node-cron |
+| **Database** | MongoDB 7 |
+| **PDF** | jsPDF 4 + jspdf-autotable (client-side generation) |
+| **Auth** | JWT (jsonwebtoken), bcryptjs (12 rounds) |
+| **Email** | Nodemailer (Gmail SMTP) |
+| **Icons** | lucide-react |
+| **Dev Tools** | tsx (watch mode), concurrently, vitest, supertest, Playwright |
+| **Infrastructure** | Docker, Docker Compose, nginx (reverse proxy + SSL termination) |
 
 ---
 
-## Production Readiness Checklist
+## Architecture Overview
 
-### ✅ Security
-- JWT authentication on all API routes (doctors, drafts)  
-- Passwords hashed with bcrypt (12 rounds)  
-- Env vars validated at startup (fail fast if missing)  
-- **Helmet** — security headers (XSS, content-type sniffing, etc.)  
-- **CORS** restricted to `CLIENT_ORIGIN` (default `http://localhost:3000`)  
-- **Rate limiting** — 200 requests/15min global, 20 requests/15min for auth routes  
-- **express-mongo-sanitize** — prevents NoSQL injection  
-- **express-validator** — validates all request bodies (email format, password length, MongoDB IDs, required fields)  
-- Multer file filter restricts to images only (2MB limit)  
-- Request body size limited to 5MB  
-- `.env*` in `.gitignore` (secrets not committed)  
-- `server/uploads/` in `.gitignore` (user uploads not committed)  
+```
+Browser (React SPA)
+    │
+    ├── /api/* ──► Express Backend (:4000) ──► MongoDB
+    │                    │
+    │                    ├── Auth (JWT, bcrypt)
+    │                    ├── Doctors CRUD (multer uploads)
+    │                    ├── Drafts CRUD (soft-delete, cron cleanup)
+    │                    └── Settings (single-document upsert)
+    │
+    ├── PDF Generation (client-side via jsPDF)
+    │
+    └── Static Assets ──► nginx (production) or Vite dev server
+```
 
-### ✅ Error Handling
-- All controllers wrapped in try/catch with JSON error responses  
-- Global 404 handler for unknown routes  
-- Global error handler catches multer errors (file size, invalid type) and unexpected errors  
-- Email sending has try/catch with logging  
-- Frontend API layer returns `{ data?, error? }` consistently  
-
-### ✅ Data Persistence
-- Drafts stored in MongoDB per user (userId reference)  
-- Doctors stored in MongoDB with image URLs  
-- Active form state cached in localStorage (survives refresh)  
-- Clinic settings in localStorage (no backend yet)  
-- LocalStorage drafts kept as offline fallback (no longer primary persistence)  
-
-### ⚠️ Not Yet Production (Known Gaps)
-
-| Issue | Impact | Recommendation |
-|-------|--------|---------------|
-| **No HTTPS** | Credentials sent in plaintext | Add TLS/SSL termination (nginx/caddy/reverse proxy) |
-| **Email via Gmail SMTP** | Gmail may block or require app password | Use a transactional email service (SendGrid, Resend, etc.) |
-| **Doctor images not deleted on doctor removal** | Orphaned files on disk | Add file cleanup logic in `deleteDoctor` |
-| **No logging framework** | Console only | Add structured logging (winston/pino) |
-
-### ✅ Verified
-- Frontend TypeScript — compiles with zero errors  
-- Backend TypeScript — compiles with zero errors  
-- All code reviewed for unnecessary localStorage (removed draft persistence)  
-- All async operations have error handling  
+**Data Flow:**
+1. Patient info filled in PatientFormPage → synced to localStorage + context
+2. Medicines added in MedicineEntryPage → auto-calculates totals
+3. Save Draft → POST `/api/drafts` → MongoDB + localStorage fallback
+4. Generate PDFs → validates form → saves draft → opens PreviewPage
+5. PreviewPage → generates 4 PDF types in-browser using jsPDF
 
 ---
 
-## How to Run
+## Quick Start
+
+### Prerequisites
+
+- Node.js 20+
+- MongoDB 7 (local or Docker)
+- npm or bun
+
+### 1. Install Dependencies
 
 ```bash
-# 1. Start MongoDB
+# Frontend dependencies (root)
+npm install
+
+# Backend dependencies
+cd server && npm install && cd ..
+```
+
+### 2. Configure Environment
+
+```bash
+# Copy and edit .env
+# Required variables:
+VITE_API_URL=http://localhost:4000/api
+MONGODB_URI=mongodb://localhost:27017/lhccpdf
+JWT_SECRET=<your-random-secret>
+PORT=4000
+CLIENT_ORIGIN=http://localhost:3000
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-gmail-app-password
+ADMIN_EMAIL=admin@example.com
+```
+
+### 3. Start MongoDB
+
+```bash
+# Option A: Local install
 mongod
 
-# 2. Install dependencies
-cd server && npm install
-cd .. && npm install
+# Option B: Docker
+docker run -d -p 27017:27017 mongo:7
+```
 
-# 3. Configure .env (copy from .env.example)
-MONGODB_URI=mongodb://localhost:27017/lhccpdf
-JWT_SECRET=your-secret-key
-PORT=4000
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-ADMIN_EMAIL=admin@example.com
-VITE_API_URL=http://localhost:4000/api
+### 4. Run Development Server
 
-# 4. Run both frontend + backend
+```bash
+# Run both frontend + backend simultaneously
 npm run dev:all
 
-# Or separately:
-npm run dev          # Frontend (port 3000)
-npm run dev:server   # Backend (port 4000)
+# Or run separately:
+npm run dev          # Frontend on http://localhost:3000
+npm run dev:server   # Backend on http://localhost:4000
+```
+
+### 5. Build for Production
+
+```bash
+# Build frontend
+npm run build         # Outputs to dist/
+
+# Build backend
+cd server && npm run build && cd ..  # Outputs to server/dist/
+```
+
+### Available Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start frontend dev server (port 3000) |
+| `npm run dev:server` | Start backend dev server (port 4000) |
+| `npm run dev:all` | Start both frontend + backend concurrently |
+| `npm run build` | Build frontend for production |
+| `npm run preview` | Preview production build locally |
+| `npm run lint` | TypeScript type-check (zero errors expected) |
+| `npm test` | Run all frontend unit/component tests |
+| `npm run test:watch` | Run frontend tests in watch mode |
+| `npm run test:coverage` | Run frontend tests with coverage report |
+| `npm run test:e2e` | Run Playwright E2E tests |
+| `npm run test:all` | Run frontend + E2E tests sequentially |
+
+**From `server/`:**
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start backend with hot-reload (tsx watch) |
+| `npm run build` | Compile TypeScript to dist/ |
+| `npm run start` | Start production server (compiled) |
+| `npm test` | Run all backend tests (unit + integration + security) |
+| `npm run test:watch` | Run backend tests in watch mode |
+| `npm run test:coverage` | Run backend tests with coverage report |
+
+---
+
+## Project Structure
+
+```
+.
+├── .env                          # Environment variables (gitignored)
+├── .gitignore
+├── .dockerignore
+├── docker-compose.yml            # MongoDB + Backend + nginx orchestration
+├── Dockerfile                    # Backend Docker image
+├── vite.config.ts                # Vite config (React, Tailwind, path aliases)
+├── vitest.config.ts              # Frontend test config (jsdom, React plugins)
+├── tsconfig.json                 # Frontend TypeScript config
+├── index.html                    # Vite entry HTML
+├── package.json                  # Frontend dependencies + scripts
+│
+├── nginx/
+│   ├── Dockerfile                # Multi-stage: build React → serve via nginx
+│   ├── nginx.conf                # Base nginx config
+│   └── conf.d/
+│       ├── http.conf             # HTTP → HTTPS redirect
+│       └── https.conf            # SSL termination + reverse proxy to backend
+│
+├── src/                          # Frontend source
+│   ├── main.tsx                  # React entry, router, providers
+│   ├── App.tsx                   # App shell (sidebar + header + pages)
+│   ├── index.css                 # Tailwind imports
+│   ├── types/
+│   │   └── index.ts              # All TypeScript interfaces
+│   ├── assets/                   # Static images (logo, seals, footer)
+│   ├── test/
+│   │   └── setup.ts              # Vitest setup (jest-dom matchers, mocks)
+│   ├── utils/
+│   │   ├── numberToWords.ts      # INR amount → English words
+│   │   ├── defaultImages.ts      # Canvas-generated default logo/signature
+│   │   └── __tests__/            # Unit tests for utils
+│   ├── services/
+│   │   ├── api.ts                # HTTP client (fetch, JWT, FormData)
+│   │   ├── pdfService.ts         # Barrel re-export of all PDF generators
+│   │   ├── pdfHelpers.ts         # Shared PDF drawing utils
+│   │   ├── annexurePdf.ts        # Annexure-1 PDF generator
+│   │   ├── cashBillPdf.ts        # Cash Bill / Invoice PDF generator
+│   │   ├── toWhomsoeverPdf.ts    # Certificate PDF generator
+│   │   ├── treatmentBillPdf.ts   # Treatment Bill PDF generator
+│   │   └── __tests__/            # Unit tests for services
+│   ├── context/
+│   │   ├── AuthContext.tsx        # Auth state (login, register, JWT)
+│   │   ├── ClinicContext.tsx      # Main app state (patients, meds, drafts)
+│   │   ├── ToastContext.tsx       # Toast notification system
+│   │   └── __tests__/            # Unit tests for contexts
+│   ├── components/
+│   │   ├── Sidebar.tsx            # Navigation sidebar (responsive drawer)
+│   │   ├── Header.tsx             # Top bar (save, new, generate buttons)
+│   │   ├── ToastContainer.tsx     # Toast notifications UI
+│   │   ├── ProtectedRoute.tsx     # Auth guard wrapper
+│   │   └── __tests__/            # Unit tests for components
+│   └── pages/
+│       ├── LoginPage.tsx          # Email/password login
+│       ├── RegisterPage.tsx       # Two-step registration (OTP)
+│       ├── ForgotPasswordPage.tsx  # Three-step password reset
+│       ├── DashboardPage.tsx      # Stats, active drafts, patient list
+│       ├── PatientFormPage.tsx    # Patient demographics form
+│       ├── MedicineEntryPage.tsx  # Medicine prescription matrix
+│       ├── PreviewPage.tsx        # PDF preview hub (4 document types)
+│       └── SettingsPage.tsx       # Clinic settings, doctor management
+│
+├── server/                       # Backend source
+│   ├── package.json              # Backend dependencies + scripts
+│   ├── tsconfig.json
+│   ├── vitest.config.ts          # Backend test config (node, mongodb-memory-server)
+│   ├── server.ts                 # Express app entry point
+│   ├── config/
+│   │   └── db.ts                 # MongoDB connection
+│   ├── middleware/
+│   │   ├── auth.ts               # JWT verification middleware
+│   │   ├── validate.ts           # express-validator rules for all routes
+│   │   └── upload.ts             # Multer config (disk storage, 2MB, images only)
+│   ├── models/
+│   │   ├── User.ts               # User schema (name, email, hashed password)
+│   │   ├── Otp.ts                 # OTP schema (TTL index, types)
+│   │   ├── Doctor.ts             # Doctor schema (name, qualification, images)
+│   │   ├── Draft.ts              # Draft schema (patientInfo, medicines, soft-delete)
+│   │   └── Setting.ts            # Clinic settings schema (single document)
+│   ├── controllers/
+│   │   ├── authController.ts     # Register, login, OTP, password reset
+│   │   ├── doctorController.ts   # CRUD with file uploads
+│   │   ├── draftController.ts    # CRUD with soft-delete
+│   │   └── settingController.ts  # Get/upsert clinic settings
+│   ├── routes/
+│   │   ├── auth.ts               # /api/auth endpoints
+│   │   ├── doctor.ts             # /api/doctors endpoints
+│   │   ├── draft.ts              # /api/drafts endpoints
+│   │   └── settings.ts           # /api/settings endpoints
+│   ├── utils/
+│   │   └── email.ts              # Nodemailer transporter + OTP email sender
+│   ├── jobs/
+│   │   └── cleanupDrafts.ts      # Daily cron: purge soft-deleted drafts >30 days
+│   ├── __tests__/                # Backend tests
+│   │   ├── setup.ts              # mongodb-memory-server setup
+│   │   ├── middleware/           # Auth & validation middleware tests
+│   │   ├── controllers/          # Controller unit tests
+│   │   ├── integration/          # Full API integration tests
+│   │   └── security.test.ts      # Security & performance tests
+│   └── uploads/doctors/          # Uploaded doctor images (gitignored)
+│
+└── e2e/                          # Playwright E2E tests
+    ├── playwright.config.ts
+    ├── auth-flows.spec.ts
+    ├── patient-flow.spec.ts
+    └── pdf-generation.spec.ts
 ```
 
 ---
 
-## Env Variables Required
+## Frontend
 
-| Variable | Description |
-|----------|-------------|
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret for signing JWT tokens |
-| `PORT` | Backend port (default 4000) |
-| `EMAIL_USER` | Gmail address for sending OTPs |
-| `EMAIL_PASS` | Gmail app password |
-| `ADMIN_EMAIL` | Admin email to receive registration OTPs |
-| `VITE_API_URL` | Backend URL for frontend (default `http://localhost:4000/api`) |
-| `CLIENT_ORIGIN` | Allowed CORS origin (default `http://localhost:3000`) |
+### Pages
+
+| Page | Route | Description |
+|---|---|---|
+| **LoginPage** | `/login` | Email/password authentication with "remember me" |
+| **RegisterPage** | `/register` | Two-step: (1) name/email/password form, (2) 6-digit OTP verification |
+| **ForgotPasswordPage** | `/forgot-password` | Three-step: email → OTP + new password → success |
+| **DashboardPage** | `/` (tab) | Welcome banner, 4 stat cards, active draft tracker, saved patient history table |
+| **PatientFormPage** | `/` (tab) | Patient demographics: name, company, address, country, phone, OP No, age, sex, passport/ID, diagnosis, date, invoice (auto-generated), ref no |
+| **MedicineEntryPage** | `/` (tab) | Full prescription matrix: medicine name (datalist), pack qty, dosage unit, rate, total (auto-calc), morning/noon/night dosage, food instruction, remarks. Row operations: add, delete, duplicate, reorder. Payment mode split (online/cash). |
+| **PreviewPage** | `/` (tab) | Document hub with 4 PDF types, live iframe preview with zoom, download single/all, print, open in new tab |
+| **SettingsPage** | `/` (tab) | Doctor management (add/remove with image upload), clinic profile (name, address, phone, email, website, footer text), drag-and-drop signature upload |
+
+### Contexts
+
+| Context | Responsibility |
+|---|---|
+| **AuthContext** | User state, JWT persistence in localStorage, login/register/forgot-password flows, token verification on mount |
+| **ClinicContext** | Central state: clinic settings, patient info, medicines, drafts, doctors. Auto-syncs to localStorage. Async API sync for draft/doctor/settings CRUD. Form validation logic. Payment mode tracking. |
+| **ToastContext** | Toast notification queue with auto-dismiss (4s). Types: success, error, info. |
+
+### PDF Services (client-side, via jsPDF)
+
+| Generator | Output |
+|---|---|
+| `annexurePdf.ts` | Annexure-1: Medicine dosage schedule formatted for customs clearance |
+| `cashBillPdf.ts` | Cash Bill / Invoice with auto-table, totals, INR words, payment mode split |
+| `treatmentBillPdf.ts` | Treatment Bill with patient details, diagnosis, payment split, GSTN, disclaimers |
+| `toWhomsoeverPdf.ts` | "To Whomsoever It May Concern" certification letter |
+
+---
+
+## Backend
+
+### Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `MONGODB_URI` | Yes | — | MongoDB connection string |
+| `JWT_SECRET` | Yes | — | Secret key for signing JWTs |
+| `ADMIN_EMAIL` | Yes | — | Email to receive registration OTPs |
+| `EMAIL_USER` | Yes | — | Gmail address for sending OTPs |
+| `EMAIL_PASS` | Yes | — | Gmail app password |
+| `PORT` | No | `4000` | Backend listen port |
+| `CLIENT_ORIGIN` | No | `http://localhost:3000` | Allowed CORS origin |
+| `VITE_API_URL` | No | `http://localhost:4000/api` | Backend URL (frontend) |
+
+The server **fails fast** at startup if any required env var (`MONGODB_URI`, `JWT_SECRET`, `ADMIN_EMAIL`, `EMAIL_USER`, `EMAIL_PASS`) is missing.
+
+### Middleware Stack (applied in order)
+
+1. **Helmet** — Security headers (XSS, content-type sniffing, frame options, etc.)
+2. **CORS** — Restricted to `CLIENT_ORIGIN`
+3. **Rate Limiter (global)** — 200 requests per 15 minutes
+4. **Rate Limiter (auth)** — 20 requests per 15 minutes (applied to `/api/auth`)
+5. **`express.json`** — 5MB body limit
+6. **mongo-sanitize** — Prevents NoSQL injection (`$ne`, `$gt`, `$where`, etc.)
+7. **Static files** — `/uploads` serves doctor images
+8. **Routes** — Auth, Doctors, Drafts, Settings
+9. **404 handler** — JSON error for unknown routes
+10. **Global error handler** — Catches Multer errors, file-too-large, unexpected errors
+
+### Models
+
+| Model | Key Fields |
+|---|---|
+| **User** | `name`, `email` (unique, lowercase), `password` (hashed) |
+| **Otp** | `email`, `otp`, `type` (registration/forgot-password), `expiresAt` (TTL index), `verified` |
+| **Doctor** | `name`, `qualification` (default B.S.M.S), `signature` (URL), `seal` (URL), timestamps |
+| **Draft** | `patientInfo` (sub-document), `medicines` (array), `isDeleted`, `deletedBy`, `deletedAt`, timestamps |
+| **Setting** | `logo`, `name`, `address`, `phone`, `email`, `website`, `signature`, `footerText`, `selectedDoctorId`, timestamps |
+
+### Scheduled Jobs
+
+- **Daily midnight cleanup** (`server/jobs/cleanupDrafts.ts`): Permanently deletes drafts soft-deleted more than 30 days ago.
+
+---
+
+## API Reference
+
+All non-auth endpoints require `Authorization: Bearer <token>` header.
+
+### Health
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/health` | No | Returns `{ status: "ok" }` |
+
+### Authentication
+
+| Method | Endpoint | Auth | Body | Response |
+|---|---|---|---|---|
+| POST | `/api/auth/register` | No | `{ name, email, password }` | OTP sent to admin email |
+| POST | `/api/auth/verify-registration-otp` | No | `{ name, email, password, otp }` | JWT + user |
+| POST | `/api/auth/login` | No | `{ email, password }` | JWT + user |
+| POST | `/api/auth/forgot-password` | No | `{ email }` | Confirmation message |
+| POST | `/api/auth/reset-password` | No | `{ email, otp, newPassword }` | Success message |
+| GET | `/api/auth/me` | Yes | — | Current user |
+
+### Doctors
+
+| Method | Endpoint | Auth | Body | Response |
+|---|---|---|---|---|
+| GET | `/api/doctors` | Yes | — | `{ doctors: [...] }` |
+| POST | `/api/doctors` | Yes | FormData: `name`, `qualification`, `signature` (file), `seal` (file) | Created doctor |
+| PUT | `/api/doctors/:id` | Yes | FormData or JSON | Updated doctor |
+| DELETE | `/api/doctors/:id` | Yes | — | `{ message }` |
+
+### Drafts
+
+| Method | Endpoint | Auth | Body | Response |
+|---|---|---|---|---|
+| GET | `/api/drafts` | Yes | — | `{ drafts: [...] }` (excludes soft-deleted) |
+| POST | `/api/drafts` | Yes | `{ draftId?, patientInfo, medicines }` | Created/updated draft |
+| DELETE | `/api/drafts/:id` | Yes | — | Soft-deleted `{ message }` |
+
+### Settings
+
+| Method | Endpoint | Auth | Body | Response |
+|---|---|---|---|---|
+| GET | `/api/settings` | Yes | — | `{ settings }` or `null` |
+| PUT | `/api/settings` | Yes | Settings fields | Upserted settings (single document) |
+
+---
+
+## Testing
+
+The project has **3 layers of tests**: unit, integration/API, and E2E.
+
+### Test Coverage Summary
+
+| Category | Tests | What It Covers |
+|---|---|---|
+| **Frontend Unit** | 60 | Utils (numberToWords, defaultImages, pdfHelpers), API service layer, ToastContext, AuthContext, ProtectedRoute |
+| **Backend Unit** | 81 | Auth middleware, validation rules (20 variants), auth controllers (16), doctor CRUD (8), draft CRUD (6), settings (4), Helmet headers, rate limiting, NoSQL injection prevention, input size limits, response time |
+| **Backend Integration** | 14 | Full auth flows (register→OTP→login), password reset, protected endpoints, doctor CRUD via HTTP, draft CRUD via HTTP, settings UPSERT, validation error responses |
+| **E2E (Playwright)** | 8 | Login page rendering, navigation, patient form fields, medicine entry, preview PDF options, sidebar navigation |
+
+### Running Tests
+
+```bash
+# Frontend tests (60 tests)
+npm test
+npm run test:watch      # Watch mode
+npm run test:coverage   # With coverage report
+
+# Backend tests (81 tests)
+cd server && npm test
+npm run test:watch      # Watch mode
+npm run test:coverage   # With coverage report
+
+# E2E tests (requires running app)
+npm run test:e2e
+
+# All tests
+npm run test:all
+```
+
+### Test Architecture
+
+**Frontend** (`vitest` + `@testing-library/react` + `jsdom`):
+- Tests run in a simulated browser environment (jsdom)
+- API calls are mocked (global `fetch` or `vi.mock`)
+- Canvas is mocked for defaultImages tests
+- Context providers are wrapped around components for integration-style testing
+
+**Backend** (`vitest` + `supertest` + `mongodb-memory-server`):
+- Tests use an in-memory MongoDB instance (no external DB needed)
+- Each test starts with a clean database
+- Controller unit tests mock Express req/res objects
+- Integration tests use supertest to make real HTTP requests
+- Security tests validate Helmet headers, rate limiting, NoSQL sanitization, and input size limits
+
+**E2E** (`@playwright/test`):
+- Tests run against the actual running application
+- Chromium browser automation
+- Screenshots on failure, trace on retry
+
+---
+
+## Docker Deployment
+
+### Architecture
+
+```
+docker-compose.yml
+├── mongodb (mongo:7) — persisted data volume
+├── backend (node:20-alpine, tsx runner)
+└── nginx (multi-stage: React build → nginx:alpine)
+    ├── serves static frontend (dist/)
+    ├── reverse proxies /api/* to backend
+    ├── reverse proxies /uploads/* to backend
+    └── SSL termination with Let's Encrypt
+```
+
+### Deploy
+
+```bash
+# 1. Set up environment
+cp .env.example .env
+# Edit .env with production values
+
+# 2. Set up SSL certificates (first time)
+docker run -it --rm -v /etc/letsencrypt:/etc/letsencrypt certbot/certbot certonly \
+  -d lhccpdf.lakshmihealthcarecentrerockfort.com
+
+# 3. Build and start
+docker compose up -d --build
+```
+
+### Production nginx Configuration
+
+- **HTTP** (port 80): Redirects all traffic to HTTPS
+- **HTTPS** (port 443):
+  - SSL via Let's Encrypt certificates
+  - Gzip compression for text assets
+  - `/api/*` proxied to backend container
+  - `/uploads/*` proxied to backend container
+  - `/*` serves React SPA with fallback to `index.html`
+
+---
+
+## Security Features
+
+| Feature | Implementation |
+|---|---|
+| **JWT Authentication** | 7-day expiry, Bearer token on all protected routes |
+| **Password Hashing** | bcrypt with 12 salt rounds |
+| **Helmet Headers** | XSS, content-type sniffing, frame options, DNS prefetch, etc. |
+| **CORS** | Restricted to `CLIENT_ORIGIN` env var |
+| **Rate Limiting** | Global 200/15min, Auth 20/15min |
+| **NoSQL Injection** | `express-mongo-sanitize` strips `$` and `.` from input |
+| **Input Validation** | express-validator on all POST/PUT routes |
+| **File Upload** | Multer: 2MB limit, images only (MIME type filter) |
+| **Body Size Limit** | 5MB via `express.json({ limit: '5mb' })` |
+| **Env Validation** | Server crashes at startup if any required env var is missing |
+| **Secrets** | `.env*` in `.gitignore`, JWT secret is a 64-byte hex string |
+| **Soft Delete** | Drafts are soft-deleted, permanently purged after 30 days |
+
+---
+
+## Troubleshooting
+
+### Server fails to start
+
+```
+Missing required environment variable: MONGODB_URI
+```
+→ Ensure `.env` file exists with all required variables at the project root.
+
+### MongoDB connection refused
+
+```
+MongoDB connection error: MongooseError: connect ECONNREFUSED ::1:27017
+```
+→ Start MongoDB: `mongod` or `docker run -d -p 27017:27017 mongo:7`
+
+### Email sending fails
+
+```
+Failed to send email
+```
+→ Verify `EMAIL_USER` and `EMAIL_PASS` (use a Gmail app password, not your regular password).  
+→ For Gmail: enable 2FA, generate app password at https://myaccount.google.com/apppasswords.
+
+### File upload fails
+
+```
+File too large (max 2MB)
+```
+→ Ensure uploaded images are under 2MB. Only JPEG, PNG, GIF, WebP are allowed.
+
+### CORS errors in browser
+
+```
+Access to fetch at 'http://localhost:4000/api/...' from origin 'http://localhost:3000'
+has been blocked by CORS policy
+```
+→ Set `CLIENT_ORIGIN=http://localhost:3000` in `.env` and restart the backend.
+
+### Tests fail with MongoDB
+
+```
+MongoMemoryServer: Failed to start MongoDB instance
+```
+→ Ensure you have a C++ build toolchain installed (required by mongodb-memory-server):
+  ```bash
+  # Windows: Install Visual Studio Build Tools
+  # macOS: xcode-select --install
+  # Linux: sudo apt install build-essential
+  ```
+
+### TypeScript compilation errors on server files
+
+The lint script (`npm run lint`) only checks frontend files. To check server files:
+```bash
+cd server && npx tsc --noEmit
+```

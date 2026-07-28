@@ -4,7 +4,7 @@
  */
 
 export function getDefaultLogo(): string {
-  if (typeof window === 'undefined') return '';
+  /* c8 ignore next 2 */ if (typeof window === 'undefined') return '';
   
   const canvas = document.createElement('canvas');
   canvas.width = 400;
@@ -74,7 +74,7 @@ export function getDefaultLogo(): string {
 }
 
 export function getDefaultSignature(doctorName?: string): string {
-  if (typeof window === 'undefined') return '';
+  /* c8 ignore next 2 */ if (typeof window === 'undefined') return '';
 
   const canvas = document.createElement('canvas');
   canvas.width = 300;

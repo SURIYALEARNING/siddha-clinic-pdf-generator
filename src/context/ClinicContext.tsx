@@ -450,10 +450,10 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           createdAt: d.createdAt,
         }));
         setSavedDrafts(prev => {
-          const localIds = new Set(prev.map(d => d.id));
+          const apiIds = new Set(apiDrafts.map(d => d.id));
           const merged = [...apiDrafts];
           for (const local of prev) {
-            if (!localIds.has(local.id)) {
+            if (!apiIds.has(local.id)) {
               merged.push(local);
             }
           }
