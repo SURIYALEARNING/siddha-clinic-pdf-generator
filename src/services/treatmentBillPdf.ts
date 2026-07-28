@@ -25,7 +25,7 @@ function drawLabelValue(doc: jsPDF, label: string, value: string | undefined, x:
   return y + 5;
 }
 
-export function generateTreatmentBillPdf(patient: PatientInfo, medicines: MedicineItem[], settings: ClinicSettings): Blob {
+export function generateTreatmentBillPdf(patient: PatientInfo, medicines: MedicineItem[], settings: ClinicSettings, paymentOnline: number = 0, paymentCash: number = 0): Blob {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const PAGE_WIDTH = doc.internal.pageSize.getWidth();
   const PAGE_HEIGHT = doc.internal.pageSize.getHeight();
@@ -48,6 +48,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   doc.setFontSize(9.5);
   doc.text(`OP No: ${patient.opNo || ''}`, MARGIN, y);
   doc.text(`Date: ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
+  doc.text(`Invoice No: ${patient.invoiceNo}`, PAGE_WIDTH - MARGIN, y + 5, { align: 'right' });
 
   y += 8;
 
@@ -178,8 +179,11 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   doc.setFont(BODY_FONT, 'bold');
   doc.setFontSize(9);
   doc.text('Mode of Payment:', MARGIN, contentY);
+  contentY += 5;
   doc.setFont(BODY_FONT, 'normal');
-  doc.text('UPI / Cash', MARGIN + doc.getTextWidth('Mode of Payment: '), contentY);
+  doc.text(`Payment Mode Online: ${paymentOnline.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, MARGIN, contentY);
+  contentY += 5;
+  doc.text(`Payment Mode Cash: ${paymentCash.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, MARGIN, contentY);
   contentY += 8;
   sealPage(doc, contentY - 2, doctorSeal)
   drawSignatureBlock(doc, settings, contentY);

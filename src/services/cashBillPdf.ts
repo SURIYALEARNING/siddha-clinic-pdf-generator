@@ -22,6 +22,7 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(9.5);
   doc.text(`Date: ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - 15, y - 5, { align: 'right' });
+  doc.text(`Invoice No: ${patient.invoiceNo}`, PAGE_WIDTH - 15, y, { align: 'right' });
 
 
   y += 10;

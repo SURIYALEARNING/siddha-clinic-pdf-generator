@@ -41,6 +41,10 @@ interface ClinicContextType {
   removeDoctor: (id: string) => Promise<void>;
   loadingDoctors: boolean;
   loadingDrafts: boolean;
+  paymentOnline: number;
+  paymentCash: number;
+  setPaymentOnline: (val: number) => void;
+  setPaymentCash: (val: number) => void;
 }
 
 const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
@@ -158,6 +162,13 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [paymentOnline, setPaymentOnline] = useState(0);
+  const [paymentCash, setPaymentCash] = useState(0);
+
+  useEffect(() => {
+    const total = medicines.reduce((s, m) => s + m.total, 0);
+    setPaymentOnline(Math.max(0, total - paymentCash));
+  }, [medicines]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [loadingDrafts, setLoadingDrafts] = useState(false);
 
@@ -475,7 +486,11 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       addDoctor,
       removeDoctor,
       loadingDoctors,
-      loadingDrafts
+      loadingDrafts,
+      paymentOnline,
+      paymentCash,
+      setPaymentOnline,
+      setPaymentCash
     }}>
       {children}
     </ClinicContext.Provider>

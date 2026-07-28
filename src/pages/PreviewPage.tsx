@@ -23,7 +23,7 @@ import {
 type DocumentType = 'certificate' | 'annexure' | 'bill' | 'treatment';
 
 export const PreviewPage: React.FC = () => {
-  const { patientInfo, medicines, settings, validateForm } = useClinic();
+  const { patientInfo, medicines, settings, validateForm, paymentOnline, paymentCash } = useClinic();
   
   const [activeDoc, setActiveDoc] = useState<DocumentType>('certificate');
   const [annexureUrl, setAnnexureUrl] = useState<string>('');
@@ -58,7 +58,7 @@ export const PreviewPage: React.FC = () => {
         const certBlob = generateToWhomsoeverPdf(patientInfo, settings);
         const annexureBlob = generateAnnexurePdf(patientInfo, medicines, settings);
         const billBlob = generateCashBillPdf(patientInfo, medicines, settings);
-        const treatmentBlob = generateTreatmentBillPdf(patientInfo, medicines, settings);
+        const treatmentBlob = generateTreatmentBillPdf(patientInfo, medicines, settings, paymentOnline, paymentCash);
 
         // Set URLs
         setAnnexureUrl(URL.createObjectURL(annexureBlob));

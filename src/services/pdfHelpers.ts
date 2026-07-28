@@ -160,13 +160,7 @@ export function drawDocumentMetaAndToBlock(
   doc.setTextColor(0, 0, 0);
 
   doc.text(`Date: ${formatDateDisplay(patient.date)}`, pageWidth - margin, yStart, { align: 'right' });
-  // if (isAnnexure) {
-  //   doc.text(`Ref No: ${patient.refNo || 'N/A'}`, pageWidth - margin, yStart + 5, { align: 'right' });
-  // } else if (isBill) {
-  //   doc.text(`Invoice No: ${patient.invoiceNo}`, pageWidth - margin, yStart + 5, { align: 'right' });
-  // } else {
-  //   doc.text(`Ref No: ${patient.refNo || 'N/A'}`, pageWidth - margin, yStart + 5, { align: 'right' });
-  // }
+  doc.text(`Invoice No: ${patient.invoiceNo}`, pageWidth - margin, yStart + 5, { align: 'right' });
 
   const titleY = yStart + 15;
   doc.setFont('times', 'bold');

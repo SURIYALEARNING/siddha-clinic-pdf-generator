@@ -50,7 +50,11 @@ export const MedicineEntryPage: React.FC = () => {
     errors,
     setActiveTab,
     validateForm,
-    saveCurrentDraft
+    saveCurrentDraft,
+    paymentOnline,
+    paymentCash,
+    setPaymentOnline,
+    setPaymentCash,
   } = useClinic();
 
   const handleAddRow = () => {
@@ -420,7 +424,7 @@ export const MedicineEntryPage: React.FC = () => {
 
         {/* Totals Summary under table */}
         {medicines.length > 0 && (
-          <div className="flex justify-end pt-4 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-slate-100">
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-center gap-3 sm:gap-6 w-full sm:w-auto sm:min-w-[320px]">
               <div className="p-3 bg-white text-blue-600 rounded-xl shadow-xs">
                 <Calculator className="w-5 h-5" />
@@ -430,6 +434,38 @@ export const MedicineEntryPage: React.FC = () => {
                 <p className="text-xl font-black text-slate-800">
                   INR {grandTotalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3 w-full sm:w-auto sm:min-w-[280px]">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Mode of Payment</p>
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-xs font-semibold text-slate-700">Online:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={paymentOnline}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setPaymentOnline(val);
+                    setPaymentCash(Math.max(0, grandTotalValue - val));
+                  }}
+                  className="w-28 px-2 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 text-xs font-semibold text-right outline-hidden"
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-xs font-semibold text-slate-700">Cash:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={paymentCash}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setPaymentCash(val);
+                    setPaymentOnline(Math.max(0, grandTotalValue - val));
+                  }}
+                  className="w-28 px-2 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 text-xs font-semibold text-right outline-hidden"
+                />
               </div>
             </div>
           </div>
