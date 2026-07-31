@@ -29,7 +29,7 @@ export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSe
   doc.setFont('times', 'normal');
   doc.setFontSize(15);
   const maxWidth = doc.internal.pageSize.width - 30;
-  const content1 = `I am writing this letter to inform you that the Indian Traditional Herbal products as given in Annexure-1 are given`;
+  const content1 = `I am writing this letter to inform you that the Indian Traditional Herbal products as given in Annexure-1 are given to`;
   const name = patient.name.toUpperCase();
   const address = patient.address;
   const country = patient.country;
