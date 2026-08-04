@@ -116,12 +116,9 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
 
   // Active Patient Info
+  // Deactivated by default: starts empty so patient details on the dashboard
+  // are only active after the user loads a draft or registers a new patient.
   const [patientInfo, setPatientInfo] = useState<PatientInfo>(() => {
-    const local = localStorage.getItem('lhcc_active_patient');
-    if (local) {
-      return JSON.parse(local);
-    }
-    // We pass savedDrafts.length to generate serial index
     const localDrafts = localStorage.getItem('lhcc_saved_drafts');
     const draftsCount = localDrafts ? JSON.parse(localDrafts).length : 0;
     return initialPatient(draftsCount);

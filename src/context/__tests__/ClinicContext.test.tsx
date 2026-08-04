@@ -722,7 +722,7 @@ describe('ClinicContext', () => {
     expect(names).toContain('API Draft');
   });
 
-  it('loads settings, patient, and medicines from localStorage as initial state', async () => {
+  it('loads settings and medicines from localStorage but patient detail stays deactivated by default', async () => {
     localStorage.setItem('lhcc_clinic_settings', JSON.stringify({
       logo: '', name: 'Local Store', address: 'Addr', phone: '1', email: 'e@e.com',
       website: '', signature: '', footerText: '', doctors: [], selectedDoctorId: '',
@@ -738,7 +738,7 @@ describe('ClinicContext', () => {
     const { result } = setup();
     await waitFor(() => expect(result.current.loadingDoctors).toBe(false));
     expect(result.current.settings.name).toBe('Local Store');
-    expect(result.current.patientInfo.name).toBe('Stored Patient');
+    expect(result.current.patientInfo.name).toBe('');
     expect(result.current.medicines).toHaveLength(1);
     expect(result.current.medicines[0].name).toBe('Local Med');
   });
