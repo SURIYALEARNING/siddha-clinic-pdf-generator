@@ -39,7 +39,7 @@ export function generateToWhomsoeverPdf(patient: PatientInfo, settings: ClinicSe
   const lines = [
     ...doc.splitTextToSize(content1, maxWidth),
     name,
-    address,
+    ...(address ? doc.splitTextToSize(address, maxWidth) : []),
     country,
     phone,
     passportId,

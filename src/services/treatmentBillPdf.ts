@@ -68,6 +68,7 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   y += 5;
   y = drawLabelValue(doc, 'Mobile Number: ', patient.phone, MARGIN, y);
   y = drawLabelValue(doc, 'Address: ', patient.address, MARGIN, y, 160);
+  y = drawLabelValue(doc, 'Country: ', patient.country, MARGIN, y+5, 160);
   y += 4
   y = drawLabelValue(doc, 'Diagnosis: ', patient.diagnosis, MARGIN, y, 160);
 
