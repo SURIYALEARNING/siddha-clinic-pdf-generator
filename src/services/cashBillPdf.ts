@@ -10,8 +10,6 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   const PAGE_HEIGHT = doc.internal.pageSize.getHeight();
   const BODY_FONT = 'times';
 
-  drawTemplate(doc);
-
   const centerX = PAGE_WIDTH / 2;
   let y = 66;
   doc.setFont(BODY_FONT, 'bold');
@@ -64,6 +62,15 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
     head: tableHeaders,
     body: tableData,
     theme: 'grid',
+    didDrawPage: (data) => {
+      drawTemplate(doc);
+      if (data.pageNumber > 1) {
+        doc.setFont(BODY_FONT, 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Ref No: ${patient.invoiceNo}`, PAGE_WIDTH - 15, 52, { align: 'right' });
+      }
+    },
     headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], font: 'times', fontStyle: 'bold', fontSize: 8, lineColor: [0, 0, 0], lineWidth: 0.1, halign: 'center' },
     bodyStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], font: 'times', fontSize: 8, lineColor: [0, 0, 0], lineWidth: 0.1 },
     columnStyles: {
@@ -71,16 +78,13 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
       3: { halign: 'center', cellWidth: 13 }, 4: { halign: 'right', cellWidth: 31 }, 5: { halign: 'right', cellWidth: 35 }
     },
     styles: { overflow: 'linebreak', cellPadding: 2.2, lineColor: [0, 0, 0], lineWidth: 0.1, font: 'times' },
-    margin: { left: 15, right: 15, top: 18, bottom: 20 }
+    rowPageBreak: 'avoid',
+    margin: { left: 15, right: 15, top: 65, bottom: 90 }
   });
 
   const grandTotal = medicines.reduce((sum, item) => sum + item.total, 0);
   const doctorSeal = getDoctorSeal(settings.doctors, settings.selectedDoctorId);
   let tableEndY = (doc as any).lastAutoTable.finalY + 8;
-  if (tableEndY + 38 > doc.internal.pageSize.height - 20) {
-    doc.addPage();
-    tableEndY = 25;
-  }
 
   const formattedTotal = `INR ${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   doc.setFont('times', 'bold');
@@ -98,10 +102,6 @@ export function generateCashBillPdf(patient: PatientInfo, medicines: MedicineIte
   doc.text(doc.splitTextToSize(`(Rupees ${totalWords} Only)`, doc.internal.pageSize.width - 30), 15, tableEndY + 17);
 
   let footerY = tableEndY + 30;
-  if (footerY + 25 > doc.internal.pageSize.height - 20) {
-    doc.addPage();
-    footerY = 25;
-  }
   doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.text('Thanks & Regards', 15, footerY);

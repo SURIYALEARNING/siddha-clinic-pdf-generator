@@ -1,12 +1,11 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicSettings, PatientInfo, MedicineItem } from '../types';
-import { addPageFooters, drawDocumentMetaAndToBlock, drawSignatureBlock, drawTemplate, getDoctorSeal } from './pdfHelpers';
+import { drawDocumentMetaAndToBlock, drawSignatureBlock, drawTemplate, getDoctorSeal } from './pdfHelpers';
 import { sealPage } from "./pdfHelpers";
 export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineItem[], settings: ClinicSettings): Blob {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  drawTemplate(doc);
   let y = 65;
   y = drawDocumentMetaAndToBlock(doc, patient, true, false, y);
 
@@ -33,6 +32,15 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
     head: tableHeaders,
     body: tableData,
     theme: 'grid',
+    didDrawPage: (data) => {
+      drawTemplate(doc);
+      if (data.pageNumber > 1) {
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Ref No: ${patient.invoiceNo}`, doc.internal.pageSize.width - 15, 52, { align: 'right' });
+      }
+    },
     headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 9, font: 'times', fontStyle: 'bold', lineColor: [0, 0, 0], lineWidth: 0.1 },
     bodyStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 8.5, font: 'times', lineColor: [0, 0, 0], lineWidth: 0.1 },
     columnStyles: {
@@ -46,15 +54,12 @@ export function generateAnnexurePdf(patient: PatientInfo, medicines: MedicineIte
       7: { cellWidth: 42 }
     },
     styles: { overflow: 'linebreak', cellPadding: 2.5, lineColor: [0, 0, 0], lineWidth: 0.1, font: 'times' },
-    margin: { left: 15, right: 15, top: 20, bottom: 20 }
+    rowPageBreak: 'avoid',
+    margin: { left: 15, right: 15, top: 65, bottom: 70 }
   });
 
   let tableEndY = (doc as any).lastAutoTable.finalY + 8;
   const doctorSeal = getDoctorSeal(settings.doctors, settings.selectedDoctorId);
-  if (tableEndY + 30 > doc.internal.pageSize.height - 20) {
-    doc.addPage();
-    tableEndY = 25;
-  }
 
   doc.setFont('times', 'normal');
   doc.setFontSize(10);

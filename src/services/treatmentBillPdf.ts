@@ -2,11 +2,10 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicSettings, PatientInfo, MedicineItem } from '../types';
 import { numberToWords } from '../utils/numberToWords';
-import { addPageFooters, sealPage, drawSignatureBlock, drawTemplate, treatmentBillHeadterFooter, getDoctorSeal, formatDateDisplay } from './pdfHelpers';
+import { addPageFooters, sealPage, drawSignatureBlock, treatmentBillHeadterFooter, getDoctorSeal, formatDateDisplay } from './pdfHelpers';
 
 const MARGIN = 15;
 const BODY_FONT = 'times';
-const GRAY = 0;
 const BLACK: [number, number, number] = [0, 0, 0];
 
 function drawLabelValue(doc: jsPDF, label: string, value: string | undefined, x: number, y: number, availableWidth?: number): number {
@@ -47,8 +46,8 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(9.5);
   doc.text(`OP No: ${patient.opNo || ''}`, MARGIN, y);
-  doc.text(`Date: ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
-  doc.text(`Ref No: ${patient.invoiceNo}`, PAGE_WIDTH - MARGIN, y + 5, { align: 'right' });
+  doc.text(`Date: ${formatDateDisplay(patient.date)}`, PAGE_WIDTH - MARGIN, y-12, { align: 'right' });
+  doc.text(`Ref No: ${patient.invoiceNo}`, PAGE_WIDTH - MARGIN, y -16, { align: 'right' });
 
   y += 8;
 
@@ -120,10 +119,15 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
       lineWidth: 0.1,
       font: BODY_FONT
     },
-    margin: { left: MARGIN, right: MARGIN, top: 60, bottom: 30 },
+    rowPageBreak: 'avoid',
+    margin: { left: MARGIN, right: MARGIN, top: 65, bottom: 95 },
     didDrawPage: (data) => {
+      treatmentBillHeadterFooter(doc, doc.internal.pageSize.height - 55, PAGE_WIDTH - MARGIN);
       if (data.pageNumber > 1) {
-        drawTemplate(doc);
+        doc.setFont(BODY_FONT, 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Ref No: ${patient.invoiceNo}`, PAGE_WIDTH - MARGIN, 62, { align: 'right' });
       }
     }
   });
@@ -133,12 +137,6 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
   const tableLeft = MARGIN;
   const tableRight = PAGE_WIDTH - MARGIN;
   let finalY = (doc as any).lastAutoTable.finalY;
-
-  if (finalY + 70 > PAGE_HEIGHT - 20) {
-    doc.addPage();
-    drawTemplate(doc);
-    finalY = 60;
-  }
 
   const rowHeight = 7;
   const totalCol1X = tableLeft + colWidths[0];
@@ -196,16 +194,9 @@ export function generateTreatmentBillPdf(patient: PatientInfo, medicines: Medici
 
   if (discY > PAGE_HEIGHT - 30) {
     doc.addPage();
-    drawTemplate(doc);
+    treatmentBillHeadterFooter(doc, 60, tableRight);
     discY = 60;
   }
-
-
-  discY += 5;
-  treatmentBillHeadterFooter(doc, discY, tableRight)
-
-
-
 
   return doc.output('blob');
 }

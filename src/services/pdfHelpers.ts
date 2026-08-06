@@ -56,8 +56,8 @@ export function treatmentBillHeadterFooter(doc: jsPDF, discY: number, tableRight
   doc.line(10, 265, 200, 265);
   doc.setFont(BODY_FONT, 'normal');
   doc.setFontSize(10);
-  doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY + 23);
-  discY += 27;
+  doc.text('GSTN: 33AUMPK4735E1ZP', MARGIN, discY + 27);
+  discY += 31;
 
   const disclaimers = [
     '* GST not collected from patients.',
