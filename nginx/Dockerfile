@@ -20,11 +20,10 @@ FROM nginx:alpine
 # Copy React build
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
-COPY nginx/conf.d/*.conf /etc/nginx/conf.d/
+# Copy server config into conf.d so the base nginx.conf (events/http context)
+# stays intact. The SPA/server block itself is nginx/nginx.conf.
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-EXPOSE 443
 
 CMD ["nginx", "-g", "daemon off;"]
