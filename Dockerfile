@@ -1,16 +1,20 @@
 FROM node:20-alpine
+
 WORKDIR /app
 
-COPY server/package*.json ./server/
-COPY .env* ./
-
-WORKDIR /app/server
+# Root deps provide the tsx runner for server/server.ts
+COPY package*.json ./
 RUN npm ci
 
-COPY server/ .
+# Backend deps
+COPY server/package.json server/package-lock.json ./server/
+RUN npm ci --prefix server
 
-RUN mkdir -p uploads/doctors
+COPY . .
+
+ENV NODE_ENV=production
+ENV PORT=4000
 
 EXPOSE 4000
 
-CMD ["npx", "tsx", "server.ts"]
+CMD ["npx", "tsx", "server/server.ts"]
