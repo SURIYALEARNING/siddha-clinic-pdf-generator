@@ -36,14 +36,17 @@ services:
       args:
         VITE_API_URL: /api
     restart: unless-stopped
+    # HTTP only, bound to loopback. Host-level nginx terminates TLS and
+    # proxies 443 -> 127.0.0.1:8081 (container port 80).
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - "127.0.0.1:8081:80"
     depends_on:
       - backend
 
 volumes:
   mongodb_data:
+    external: true
+    name: siddha-clinic-pdf-generator_mongodb_data
   uploads:
+    external: true
+    name: siddha-clinic-pdf-generator_uploads
