@@ -164,4 +164,51 @@ describe('DashboardPage', () => {
     expect(screen.getByText('0 Items')).toBeInTheDocument();
     expect(screen.getByText('INR 0.00')).toBeInTheDocument();
   });
+
+  it('paginates saved drafts when there are more than page size', () => {
+    // Generate 25 drafts
+    const drafts = Array.from({ length: 25 }, (_, i) => ({
+      id: `draft-${i + 1}`,
+      patientInfo: { name: `Patient ${i + 1}`, invoiceNo: `INV-${String(i + 1).padStart(3, '0')}`, country: 'India' },
+      medicines: [{ id: `m-${i + 1}`, name: 'Med', packQty: 1, rate: 100, total: 100 }],
+      createdAt: '2026-01-01',
+    }));
+
+    setup({ savedDrafts: drafts });
+
+    // Page 1 should show Patient 1 and Patient 20, but not Patient 21
+    expect(screen.getByText('Patient 1')).toBeInTheDocument();
+    expect(screen.getByText('Patient 20')).toBeInTheDocument();
+    expect(screen.queryByText('Patient 21')).not.toBeInTheDocument();
+    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+
+    // Click next page
+    fireEvent.click(screen.getByTitle('Next page'));
+
+    // Now page 2 should show Patient 21 to Patient 25, and Patient 1 should not be visible
+    expect(screen.getByText('Patient 21')).toBeInTheDocument();
+    expect(screen.getByText('Patient 25')).toBeInTheDocument();
+    expect(screen.queryByText('Patient 1')).not.toBeInTheDocument();
+    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+  });
+
+  it('changes page size and adjusts pagination', () => {
+    const drafts = Array.from({ length: 25 }, (_, i) => ({
+      id: `draft-${i + 1}`,
+      patientInfo: { name: `Patient ${i + 1}`, invoiceNo: `INV-${String(i + 1).padStart(3, '0')}`, country: 'India' },
+      medicines: [{ id: `m-${i + 1}`, name: 'Med', packQty: 1, rate: 100, total: 100 }],
+      createdAt: '2026-01-01',
+    }));
+
+    setup({ savedDrafts: drafts });
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: '10' } });
+
+    // With 10 per page and 25 drafts, total pages is 3
+    expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Patient 10')).toBeInTheDocument();
+    expect(screen.queryByText('Patient 11')).not.toBeInTheDocument();
+  });
 });
+

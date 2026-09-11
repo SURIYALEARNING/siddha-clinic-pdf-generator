@@ -61,14 +61,14 @@ export const MedicineEntryPage: React.FC = () => {
     const newItem: MedicineItem = {
       id: Math.random().toString(36).substr(2, 9),
       name: '',
-      packQty: 1,
-      unit: 'Bottles',
-      rate: 100,
-      total: 100,
-      morning: '1',
-      noon: '0',
-      night: '1',
-      foodInstruction: 'After Food',
+      packQty: 0,
+      unit: '',
+      rate: 0,
+      total: 0,
+      morning: '',
+      noon: '',
+      night: '',
+      foodInstruction: '',
       remarks: ''
     };
     updateMedicines([...medicines, newItem]);
@@ -258,6 +258,7 @@ export const MedicineEntryPage: React.FC = () => {
                           type="number"
                           min="1"
                           value={med.packQty || ''}
+                          placeholder="Qty"
                           onChange={(e) => handleRowChange(med.id, 'packQty', e.target.value === '' ? 0 : Number(e.target.value))}
                           className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold text-center outline-hidden ${errorQty ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                             }`}
@@ -286,6 +287,7 @@ export const MedicineEntryPage: React.FC = () => {
                           min="0"
                           step="0.01"
                           value={med.rate || ''}
+                          placeholder="0.00"
                           onChange={(e) => handleRowChange(med.id, 'rate', e.target.value === '' ? 0 : Number(e.target.value))}
                           className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold outline-hidden text-right ${errorRate ? 'border-rose-400 bg-rose-50/25 focus:border-rose-500' : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                             }`}
@@ -302,6 +304,7 @@ export const MedicineEntryPage: React.FC = () => {
                           min="0"
                           step="0.01"
                           value={med.total || ''}
+                          placeholder="0.00"
                           onChange={(e) => handleRowChange(med.id, 'total', e.target.value === '' ? 0 : Number(e.target.value))}
                           className="w-full px-2 py-1.5 rounded-lg border text-xs font-semibold text-right border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-hidden"
                         />

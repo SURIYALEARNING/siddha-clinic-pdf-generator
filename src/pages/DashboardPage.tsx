@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useClinic } from '../context/ClinicContext';
 import { useAuth } from '../context/AuthContext';
+import { DataTablePagination } from '../components/DataTablePagination';
 import { 
   Users, 
   Pill, 
@@ -26,6 +27,14 @@ export const DashboardPage: React.FC = () => {
     resetPatientForm,
     loadingDrafts
   } = useClinic();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  const totalPages = Math.max(1, Math.ceil(savedDrafts.length / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const paginatedDrafts = savedDrafts.slice(startIndex, startIndex + pageSize);
 
   const totalBillValue = medicines.reduce((sum, item) => sum + item.total, 0);
 
@@ -238,67 +247,84 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table id="dash-history-table" className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="py-2.5">Patient / Invoice</th>
-                    <th className="py-2.5">Country</th>
-                    <th className="py-2.5 text-center">Meds</th>
-                    <th className="py-2.5 text-right">Invoice Value</th>
-                    <th className="py-2.5 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {savedDrafts.map((draft) => {
-                    const totalCost = draft.medicines.reduce((s, m) => s + m.total, 0);
-                    return (
-                      <tr key={draft.id} className="hover:bg-slate-50/60 transition-colors group">
-                        <td className="py-3">
-                          <div>
-                            <p className="font-bold text-slate-800">{draft.patientInfo.name || "Unnamed Patient"}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">{draft.patientInfo.invoiceNo}</p>
-                          </div>
-                        </td>
-                        <td className="py-3 text-slate-600">
-                          {draft.patientInfo.country || "N/A"}
-                        </td>
-                        <td className="py-3 text-center text-slate-800 font-semibold">
-                          {draft.medicines.length}
-                        </td>
-                        <td className="py-3 text-right font-bold text-slate-800">
-                          INR {totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3">
-                          <div className="flex items-center justify-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                            <button
-                              id={`history-btn-load-${draft.id}`}
-                              onClick={() => loadDraft(draft.id)}
-                              className="p-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all border border-blue-100 flex items-center gap-1 text-[10px] font-semibold"
-                              title="Load record to active workspace"
-                            >
-                              <FolderOpen className="w-3.5 h-3.5" />
-                              <span>Load</span>
-                            </button>
-                            <button
-                              id={`history-btn-delete-${draft.id}`}
-                              onClick={() => {
-                                if (confirm(`Delete draft for "${draft.patientInfo.name}"? It can be restored later.`)) {
-                                  deleteDraft(draft.id);
-                                }
-                              }}
-                              className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-all border border-rose-100"
-                              title="Delete from local archive"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              <div className="overflow-x-auto">
+                <table id="dash-history-table" className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="py-2.5">Patient / Invoice</th>
+                      <th className="py-2.5">Country</th>
+                      <th className="py-2.5 text-center">Meds</th>
+                      <th className="py-2.5 text-right">Invoice Value</th>
+                      <th className="py-2.5 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {paginatedDrafts.map((draft) => {
+                      const totalCost = draft.medicines.reduce((s, m) => s + m.total, 0);
+                      return (
+                        <tr key={draft.id} className="hover:bg-slate-50/60 transition-colors group">
+                          <td className="py-3">
+                            <div>
+                              <p className="font-bold text-slate-800">{draft.patientInfo.name || "Unnamed Patient"}</p>
+                              <p className="text-[10px] text-slate-400 font-mono">{draft.patientInfo.invoiceNo}</p>
+                            </div>
+                          </td>
+                          <td className="py-3 text-slate-600">
+                            {draft.patientInfo.country || "N/A"}
+                          </td>
+                          <td className="py-3 text-center text-slate-800 font-semibold">
+                            {draft.medicines.length}
+                          </td>
+                          <td className="py-3 text-right font-bold text-slate-800">
+                            INR {totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-3">
+                            <div className="flex items-center justify-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+                              <button
+                                id={`history-btn-load-${draft.id}`}
+                                onClick={() => loadDraft(draft.id)}
+                                className="p-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all border border-blue-100 flex items-center gap-1 text-[10px] font-semibold"
+                                title="Load record to active workspace"
+                              >
+                                <FolderOpen className="w-3.5 h-3.5" />
+                                <span>Load</span>
+                              </button>
+                              <button
+                                id={`history-btn-delete-${draft.id}`}
+                                onClick={() => {
+                                  if (confirm(`Delete draft for "${draft.patientInfo.name}"? It can be restored later.`)) {
+                                    deleteDraft(draft.id);
+                                  }
+                                }}
+                                className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-all border border-rose-100"
+                                title="Delete from local archive"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Data Table Pagination Bar */}
+              <DataTablePagination
+                currentPage={safeCurrentPage}
+                totalRecords={savedDrafts.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+                pageSizeOptions={[10, 20, 50, 100]}
+                itemLabel="records"
+                idPrefix="dash-history-pagination"
+              />
             </div>
           )}
         </div>

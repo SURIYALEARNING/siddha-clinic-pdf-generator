@@ -40,12 +40,25 @@ describe('MedicineEntryPage', () => {
     expect(screen.getByText('The Medicine Table is empty')).toBeInTheDocument();
   });
 
-  it('"Add Medicine" button adds a new row', () => {
+  it('"Add Medicine" button adds a new row with empty default inputs', () => {
     const updateMedicines = vi.fn();
     setup({ updateMedicines, medicines: [] });
     fireEvent.click(screen.getByText('Add Medicine'));
     expect(updateMedicines).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ name: '', packQty: 1, rate: 100 })]),
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: '',
+          packQty: 0,
+          unit: '',
+          rate: 0,
+          total: 0,
+          morning: '',
+          noon: '',
+          night: '',
+          foodInstruction: '',
+          remarks: '',
+        }),
+      ]),
     );
   });
 
@@ -221,5 +234,15 @@ describe('MedicineEntryPage', () => {
     const datalist = document.getElementById('siddha-medicines');
     expect(datalist).toBeInTheDocument();
     expect(datalist?.children.length).toBeGreaterThan(0);
+  });
+
+  it('unit options and food instructions datalists are available with options', () => {
+    setup({ medicines: [{ id: 'm1', name: 'MedA', packQty: 1, unit: 'Bottles', rate: 100, total: 100, morning: '1', noon: '0', night: '1', foodInstruction: 'After Food', remarks: '' }] });
+    const unitList = document.getElementById('unit-options');
+    const foodList = document.getElementById('food-instructions');
+    expect(unitList).toBeInTheDocument();
+    expect(unitList?.children.length).toBeGreaterThan(0);
+    expect(foodList).toBeInTheDocument();
+    expect(foodList?.children.length).toBeGreaterThan(0);
   });
 });
